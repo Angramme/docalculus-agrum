@@ -1,8 +1,14 @@
 
+
+
+#ifndef GUM_CAUSAL_MODEL_H
+#define GUM_CAUSAL_MODEL_H
+
 #include <agrum/BN/BayesNet.h>
 #include <agrum/tools/graphs/parts/nodeGraphPart.h>
 #include <agrum/tools/core/set.h>
 #include <agrum/tools/core/hashTable.h>
+#include <agrum/tools/graphicalModels/DAGmodel.h>
 #include <utility>
 #include <string>
 
@@ -26,7 +32,7 @@ namespace gum{
       * @author Kacper Ozieblowski
       */
    template <typename GUM_SCALAR>
-   class CausalModel{
+   class CausalModel : public DAGmodel {
    private:
       const gum::BayesNet<GUM_SCALAR>& _ob_BN_; ///< observational bayes net
       // self.__latentVarsDescriptor = latentVarsDescriptor
@@ -39,23 +45,7 @@ namespace gum{
       CausalModel(const gum::BayesNet<GUM_SCALAR>& bn,
                const std::vector<std::pair<std::string, std::vector<gum::NodeId>>>& latentVarDescriptors = {},
                bool keepArcs = false
-               )
-               : _ob_BN_(bn), _keepArcs_(keepArcs), _ca_BN_(), _lat_(), _names_()
-      {
-         // we have to redefine attributes since the bn 
-         // may be augmented by latent variables
-
-         // nodes and arcs of BN
-         for(const auto& n : bn.nodes()) _ca_BN_.add(bn.variable(n), n);
-         for(const auto& a : bn.arcs()) _ca_BN_.addArc(a.tail(), a.head());
-
-         for(const auto& nid : _ca_BN_.nodes()){
-            _names_.insert(nid, _ca_BN_.variable(nid).name());
-         }
-
-         for(const auto& p : latentVarDescriptors)
-            addLatentVariable(p.first, p.second, keepArcs);
-      }
+               );
 
       // CausalModel(const CausalModel& ot)
       //    : CausalModel(gum::BayesNet<GUM_SCALAR>(ot._ob_BN_), )
@@ -77,11 +67,7 @@ namespace gum{
        * @param lchild the list of children
        * @param keepArcs do we keep (or not) the arc between the children ?
        */
-      void addLatentVariable(const std::string& name, const std::vector<std::string>& lchild, bool keepArcs = false){
-         std::vector<gum::NodeId> ids(lchild.size());
-         for(size_t i = 0; i<lchild.size(); i++) ids[i] = _ob_BN_.idFromName(lchild[i]);
-         addLatentVariable(name, ids, keepArcs);
-      }
+      void addLatentVariable(const std::string& name, const std::vector<std::string>& lchild, bool keepArcs = false);
 
       /**
        * @brief Add a new latent variable with a name, a pair of children and replacing (or not) correlations between children.
@@ -90,97 +76,61 @@ namespace gum{
        * @param lchild the list of children
        * @param keepArcs do we keep (or not) the arc between the children ?
        */
-      void addLatentVariable(const std::string& name, const std::vector<gum::NodeId>& lchild, bool keepArcs = false){
-         // simplest variable to add : only 2 modalities for latent variables
-         const auto id_latent = _ca_BN_.add(name, 2);
-         _lat_.insert(id_latent);
-         _names_.insert(id_latent, name);
-      
-         for(const auto& item : lchild) addCausalArc(id_latent, item);
-
-         if(keepArcs) return;
-         for(size_t i=0; i<lchild.size(); i++){
-            for(size_t j=i+1; j<lchild.size(); j++){
-               if(_ca_BN_.parents(lchild[j]).contains(lchild[i])) 
-                  eraseCausalArc(lchild[i], lchild[j]);
-               else if(_ca_BN_.parents(lchild[i]).contains(lchild[j])) 
-                  eraseCausalArc(lchild[j], lchild[i]);
-            }
-         }
-      }
-
+      void addLatentVariable(const std::string& name, const std::vector<gum::NodeId>& lchild, bool keepArcs = false);
       /**
        * @warning do not infer any computations in this model. It is strictly a structural model
        * @return const gum::BayesNet<GUM_SCALAR>& 
        */
-      const gum::BayesNet<GUM_SCALAR>& causalBN() const {
-         return _ca_BN_;
-      }
+      const gum::BayesNet<GUM_SCALAR>& causalBN() const;
 
       /**
        * @return const gum::BayesNet<GUM_SCALAR>& 
        */
-      const gum::BayesNet<GUM_SCALAR>& observationalBN() const {
-         return _ob_BN_;
-      }
+      const gum::BayesNet<GUM_SCALAR>& observationalBN() const;
 
       /**
        * @param name child node name
        * @return const gum::NodeSet& 
        */
-      const gum::NodeSet& parents(std::string name) const {
-         return parents(_ca_BN_.idFromName(name));
-      }
+      const gum::NodeSet& parents(std::string name) const;
 
       /**
        * @param id child node id 
        * @return const gum::NodeSet& 
        */
-      const gum::NodeSet& parents(gum::NodeId id) const {
-         return _ca_BN_.parents(id);
-      }
+      const gum::NodeSet& parents(gum::NodeId id) const;
 
       /**
        * @param name parent node name 
        * @return const gum::NodeSet& 
        */
-      const gum::NodeSet& children(std::string name) const {
-         return _ca_BN_.children(_ca_BN_.idFromName(name));
-      }
+      const gum::NodeSet& children(std::string name) const;
 
       /**
        * @param id parent node id 
        * @return const gum::NodeSet& 
        */
-      const gum::NodeSet& children(gum::NodeId id) const {
-         return _ca_BN_.children(id);
-      }
+      const gum::NodeSet& children(gum::NodeId id) const;
 
       /**
        * @brief Returns a mapping from node's id to it's corresponding name.
        * 
        * @return const decltype(_names_)& 
        */
-      const decltype(_names_)& names() const {
-         return _names_;
-      }
+      const decltype(CausalModel<GUM_SCALAR>::_names_)& names() const;
 
       /**
        * @param name 
        * @return gum::NodeId 
        */
-      gum::NodeId idFromName(const std::string& name) const {
-         return _ca_BN_.idFromName(name);
-      }
+      gum::NodeId idFromName(const std::string& name) const;
 
       /**
        * @brief Returns the set of ids of latent variables in the causal model.
        * 
        * @return const gum::NodeSet& 
        */
-      const gum::NodeSet& latentVariablesIds() const {
-         return _lat_;
-      }
+      const gum::NodeSet& latentVariablesIds() const;
 
       /**
        * @brief Erase the arc a->b
@@ -188,9 +138,7 @@ namespace gum{
        * @param a id fo the first node
        * @param b id fo the second node
        */
-      void eraseCausalArc(gum::NodeId a, gum::NodeId b){
-         _ca_BN_.eraseArc(a, b);
-      }
+      void eraseCausalArc(gum::NodeId a, gum::NodeId b);
 
       /**
        * @brief Erase the arc a->b
@@ -198,9 +146,7 @@ namespace gum{
        * @param a id fo the first node
        * @param b id fo the second node
        */
-      void eraseCausalArc(const std::string& a, const std::string& b){
-         _ca_BN_.eraseArc(_ob_BN_.idFromName(a), _ob_BN_.idFromName(b));
-      }
+      void eraseCausalArc(const std::string& a, const std::string& b);
 
       /**
        * @brief Add the arc a->b
@@ -208,9 +154,7 @@ namespace gum{
        * @param a
        * @param b 
        */
-      void addCausalArc(gum::NodeId a, gum::NodeId b){
-         _ca_BN_.addArc(a, b);
-      }
+      void addCausalArc(gum::NodeId a, gum::NodeId b);
 
       /**
        * @brief Add the arc a->b
@@ -218,9 +162,7 @@ namespace gum{
        * @param a
        * @param b 
        */
-      void addCausalArc(const std::string& a, const std::string& b){
-         _ca_BN_.addArc(_ob_BN_.idFromName(a), _ob_BN_.idFromName(b));
-      }
+      void addCausalArc(const std::string& a, const std::string& b);
 
       /**
        * @brief Check if the arc a->b exists
@@ -228,9 +170,7 @@ namespace gum{
        * @param a
        * @param b 
        */
-      void existsArc(gum::NodeId a, gum::NodeId b){
-         _ca_BN_.existsArc(a, b);
-      }
+      void existsArc(gum::NodeId a, gum::NodeId b);
 
       /**
        * @brief Check if the arc a->b exists
@@ -238,40 +178,28 @@ namespace gum{
        * @param a
        * @param b 
        */
-      void existsArc(const std::string& a, const std::string& b){
-         _ca_BN_.existsArc(_ob_BN_.idFromName(a), _ob_BN_.idFromName(b));
-      }
+      void existsArc(const std::string& a, const std::string& b);
 
       /**
        * @brief Return the set of nodes.
        * 
        * @return const gum::NodeSet& 
        */
-      const gum::NodeSet& nodes() const {
-         return _ca_BN_.nodes();
-      }
+      const gum::NodeSet& nodes() const ;
 
       /**
        * @brief Return the set of arcs.
        * 
        * @return const gum::ArcSet& 
        */
-      const gum::ArcSet& arcs() const {
-         return _ca_BN_.arcs();
-      }
+      const gum::ArcSet& arcs() const;
 
       /**
        * @brief Create a dot representation of the causal model.
        * 
        * @return std::string 
        */
-      std::string toDot(){
-         std::string res = "digraph {";
-         
-         // latent variables
-
-         return res;
-      }
+      std::string toDot();
       //   def toDot(self) -> str:
    //     """
    //     Create a dot representation of the causal model
@@ -429,3 +357,6 @@ namespace gum{
 
    //   return CausalModel(bn, latentVarsDescriptor, True)
 }
+
+#include "CausalModel_tpl.h"
+#endif 

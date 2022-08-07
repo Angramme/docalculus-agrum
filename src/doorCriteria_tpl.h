@@ -2,39 +2,14 @@
 #include <agrum/tools/core/set.h>
 #include <string>
 
+#include "doorCriteria.h"
 
 namespace gum{
-    /**
-     * @brief  Predicate on the existence of an open back door path 
-     * from ``x`` to ``y``, conditioning on the set of variables ``zset``
-     * 
-     * @tparam GUM_SCALAR 
-     * @param bn the DAG model
-     * @param x name of source node 
-     * @param y name of destination node
-     * @param zset names of conditioning nodes
-     * @return true (it exists)
-     * @return false 
-     */
     template<typename GUM_SCALAR>
     bool backdoor_path(const gum::BayesNet<GUM_SCALAR>& bn, const std::string& x, const std::string& y, const gum::Set<std::string>& zset){
         return !isDSep_parents(bn, x, y, zset);
     }
 
-
-    /**
-     * @brief Predicate on the existence of a directed path from 
-     * ``x`` to ``y`` in the Bayesian network ``bn`` not blocked by nodes 
-     * of ``zset``
-     * 
-     * @tparam GUM_SCALAR 
-     * @param bn the DAG model
-     * @param x name of source node
-     * @param y name of destination node
-     * @param zset names of the conditioning nodes
-     * @return true 
-     * @return false 
-     */
     template<typename GUM_SCALAR>
     bool exists_unblocked_directed_path(
         const gum::BayesNet<GUM_SCALAR>& bn, 
@@ -50,18 +25,6 @@ namespace gum{
         return false;
     }
 
-    /**
-     * @brief Tests whether or not ``zset`` satisifies the front 
-     * door criterion for ``x`` and ``y``, in the Bayesian network ``bn``
-     * 
-     * @tparam GUM_SCALAR 
-     * @param bn the DAG model
-     * @param x name of source node
-     * @param y name of destination node
-     * @param zset names of the conditioning nodes
-     * @return true 
-     * @return false 
-     */
     template<typename GUM_SCALAR>
     bool is_frontdoor(
         const gum::BayesNet<GUM_SCALAR>& bn, 
@@ -79,17 +42,6 @@ namespace gum{
         return true;
     }
 
-    /**
-     * @brief  Tests whether or not ``zset`` satisifies the back door criterion for ``x`` and ``y``, in the Bayesian network ``bn``
-     * 
-     * @tparam GUM_SCALAR 
-     * @param bn the DAG model
-     * @param x name of source node
-     * @param y name of destination node
-     * @param zset names of conditioning nodes
-     * @return true 
-     * @return false 
-     */
     template<typename GUM_SCALAR>
     bool is_backdoor(const gum::BayesNet<GUM_SCALAR>& bn, const std::string& x, const std::string& y, const gum::Set<std::string>& zset){
         const auto dex = descendants(bn, x);
@@ -98,60 +50,50 @@ namespace gum{
         return isDSep_parents(bn, x, y, zset);
     }
 
-    /**
-     * @brief Returns the set of nodes that can be reached through a
-     * backdoor path from ``a`` in the graph ``bn``
-     * 
-     * @tparam GUM_SCALAR 
-     * @param bn the DAG model
-     * @param a the backdoor node
-     * @return gum::NodeSet 
-     */
+    template<typename GUM_SCALAR>
+    void _BR_inner_br(
+        const gum::BayesNet<GUM_SCALAR>& bn, 
+        gum::NodeId x, bool pht, 
+        gum::NodeSet& reach0, 
+        gum::NodeSet& reach1)
+        {
+        for(const auto& c : bn.children(x)){
+            if(reach0.contains(c) || reach1.contains(c)) continue;
+            reach1.insert(c);
+            _BR_inner_br(bn, c, true, reach0, reach1);
+        }
+        if(pht) return;
+        for(const auto& p : bn.parents(x)){
+            if(reach0.contains(p)) continue;
+            reach0.insert(p);
+            _BR_inner_br(bn, p, false, reach0, reach1);
+        }
+    }
+
     template<typename GUM_SCALAR>
     gum::NodeSet backdoor_reach(const gum::BayesNet<GUM_SCALAR>& bn, gum::NodeId a){
-        void inner_br(
-            const gum::BayesNet<GUM_SCALAR>& bn, 
-            gum::NodeId x, bool pht, 
-            gum::NodeSet& reach0, 
-            gum::NodeSet& reach1)
-            {
-            for(const auto& c : bn.children(x)){
-                if(reach0.contains(c) || reach1.contains(c)) continue;
-                reach1.add(c);
-                inner_br(bn, c, true, reach0, reach1);
-            }
-            if(pht) return;
-            for(const auto& p : bn.parents(x)){
-                if(reach0.contains(p)) continue;
-                reach0.add(p);
-                inner_br(bn, p, false, reach0, reach1);
-            }
-        }
         const auto r = gum::Set({a});
         r += bn.parents(a);
         const auto l = gum::Set({a});
         for(const auto& pa : bn.parents(a)){
-            inner_br(bn, pa, false, r, l);
+            _BR_inner_br(bn, pa, false, r, l);
         }
-        s = r + l;
-        if(s.contains(a)) s.remove(a);
+        auto s = r + l;
+        if(s.contains(a)) s.erase(a);
         return s;
     }
 
-    // def nodes_on_dipath(bn: "pyAgrum.BayesNet", x: NodeId, y: NodeId) -> Optional[NodeSet]:
-    //   """
-    //   Returns the set of nodes through which there is a directed path from `x` to `y` in the graph `bn`
+    template<typename GUM_SCALAR>
+    const gum::NodeSet* inner_nod(BayesNet<GUM_SCALAR> bn, NodeId a, NodeId b){
+        if(a == b) return NodeSet();
 
-    //   Parameters
-    //   ----------
-    //   bn: pyAgrum.BayesNet
-    //   x  int
-    //   y: int
+        auto inners = NodeSet({a});
+    }
 
-    //   Returns
-    //   -------
-    //   Set[int] (maybe None)
-    //   """
+    template<typename GUM_SCALAR>
+    const gum::NodeSet* nodes_on_dipath(const BayesNet<GUM_SCALAR>& bn, NodeId x, NodeId y){
+        
+    }
     //   def inner_nod(g: "pyAgrum.BayesNet", a: NodeId, b: NodeId) -> Optional[NodeSet]:
     //     if b == a:
     //       return set()

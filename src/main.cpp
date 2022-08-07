@@ -2,13 +2,15 @@
 
 #include <agrum/BN/BayesNet.h>
 
-#include "CausalModel.cpp"
+#include "CausalModel.h"
+#include "doorCriteria.h"
+#include "dSeparation.h"
 
 
 
 
 int main(void) {
   gum::BayesNet<double> h;
-  CausalModel test(h);
+  gum::CausalModel test(h);
   std::cout << "hello" << std::endl;
 }
