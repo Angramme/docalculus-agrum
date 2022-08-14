@@ -1,5 +1,6 @@
 
 #include <agrum/BN/BayesNet.h>
+#include <agrum/BN/IBayesNet.h>
 #include <agrum/tools/graphs/parts/nodeGraphPart.h>
 #include <agrum/tools/core/set.h>
 #include <agrum/tools/core/hashTable.h>
@@ -147,7 +148,7 @@ namespace gum{
    }
 
    template<typename GUM_SCALAR>
-   const gum::NodeSet& CausalModel<GUM_SCALAR>::nodes() const {
+   decltype(CausalModel<GUM_SCALAR>::_ca_BN_.nodes()) CausalModel<GUM_SCALAR>::nodes() const {
       return _ca_BN_.nodes();
    }
 
@@ -157,10 +158,32 @@ namespace gum{
    }
 
    template<typename GUM_SCALAR>
+   const gum::VariableNodeMap& CausalModel<GUM_SCALAR>::variableNodeMap() const {
+      return _ca_BN_.variableNodeMap(); // TODO: implement this !
+   }
+
+   template<typename GUM_SCALAR>
+   const gum::DiscreteVariable& CausalModel<GUM_SCALAR>::variable(gum::NodeId x) const {
+      return _ca_BN_.variable(x);
+   }
+
+   template<typename GUM_SCALAR>
+   gum::NodeId CausalModel<GUM_SCALAR>::nodeId(const gum::DiscreteVariable& x) const {
+      return _ca_BN_.nodeId(x);
+   }
+
+   template<typename GUM_SCALAR>
+   const gum::DiscreteVariable& CausalModel<GUM_SCALAR>::variableFromName(const std::string& name) const{
+      return _ca_BN_.variableFromName(name);
+   }
+
+
+   template<typename GUM_SCALAR>
    std::string CausalModel<GUM_SCALAR>::toDot(){
       std::string res = "digraph {";
       
       // latent variables
+      // TODO: finish
 
       return res;
    }

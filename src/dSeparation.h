@@ -137,41 +137,6 @@ namespace gum{
     bool is_descendant(const BayesNet<GUM_SCALAR>& bn, NodeId x, NodeId y, const NodeSet& marked);
 
 
-    // def _is_ascendant(bn: "pyAgrum.BayesNet", x: NodeId, y: NodeId, marquage: Set[int] = None) -> bool:
-    //   """Predicate on whether ``x`` is an ancestor of ``y`` in the Bayesian network ``bn``"""
-
-    //   if isParent(x, y, bn):
-    //     return True
-
-    //   if marquage is None:
-    //     marquage = set()
-
-    //   for p in bn.parents(y):
-    //     if p not in marquage:
-    //       marquage.add(p)
-    //       if _is_ascendant(bn, x, p, marquage):
-    //         return True
-
-    //   return False
-
-
-    // def descendants(bn: "pyAgrum.BayesNet", x: NodeId, marked: NodeSet = None, ensdesc: NodeSet = None) -> NodeSet:
-    //   """ Returns a set composed by all the descendents of ``x`` in ``bn`` """
-    //   if marked is None:
-    //     marked = set()
-    //   if ensdesc is None:
-    //     ensdesc = set()
-
-    //   ensdesc = ensdesc | set(bn.children(x))
-
-    //   for c in bn.children(x):
-    //     if c not in marked:
-    //       marked.add(c)
-    //       ensdesc = ensdesc | descendants(bn, c, marked)
-
-    //   return ensdesc
-
-
     // def _filaires(bn: DirectedModel, interest: NodeSet = None, inf: bool = True) -> NodeSet:
     //   s = set()
 
@@ -202,77 +167,47 @@ namespace gum{
     //   return s
 
 
-    // def _barren_nodes(bn: "pyAgrum.BayesNet", interest: NodeSet = None) -> NodeSet:
-    //   """Returns the set of recursively determined barren nodes in ``bn`` relatively to the set of nodes ``interest`` (if
-    //   ``interest`` is void, then the whole set of nodes in the graph will be returned)"""
-    //   s = set()
+    /**
+     * @brief Returns the set of recursively determined barren nodes in 
+     * ``bn`` relatively to the set of nodes ``interest`` (if ``interest`` 
+     * is void, then the whole set of nodes in the graph will be returned)
+     * 
+     * @tparam GUM_SCALAR 
+     * @param bn 
+     * @param interest 
+     * @return const NodeSet& 
+     */
+    template<typename GUM_SCALAR>
+    const NodeSet& barren_nodes(const BayesNet<GUM_SCALAR>& bn, const NodeSet& interest);
 
-    //   if interest is None:
-    //     interest = set()
-
-    //   def inner_rec(a):
-    //     if a in interest | s:
-    //       return
-    //     s.add(a)
-    //     for b in bn.parents(a):
-    //       if len(set(bn.children(b)) - s) == 0 and (b not in s):
-    //         inner_rec(b)
-
-    //   for x in bn.nodes():
-    //     if len(bn.children(x)) == 0:
-    //       inner_rec(x)
-
-    //   return s
-
-
-    // def partialDAGFromBN(bn: "pyAgrum.BayesNet", Nexcl: NodeSet = None) -> "pyAgrum.DAG":
-    //   """
-    //   Creates and returns a duplicate DAG of the given Bayesian network
-
-    //   Parameters
-    //   ----------
-    //   bn : pyAgrum.BayesNet
-    //     the source
-    //   Nexcl : NodeSet
-    //     the nodes
-
-    //   Returns
-    //   -------
-    //   pyAgrum.DAG
-    //   """
-    //   if Nexcl is None:
-    //     Nexcl = set()
-    //   d = pyAgrum.DAG()
-
-    //   nodes = set(bn.nodes()) - (Nexcl)
-    //   for n in nodes:
-    //     d.addNodeWithId(n)
-
-    //   for x, y in bn.arcs():
-    //     if x in nodes and y in nodes:
-    //       d.addArc(x, y)
-
-    //   return d
+    /**
+     * @brief Creates and returns a duplicate DAG of the given 
+     * Bayesian network, excluding the nodes provided in the nexcl set.
+     * 
+     * @tparam GUM_SCALAR 
+     * @param bn 
+     * @param nexcl 
+     * @return DAG 
+     */
+    template<typename GUM_SCALAR>
+    DAG partialDAGfromBN(const BayesNet<GUM_SCALAR>& bn, const NodeSet& nexcl = {});
 
 
-    // def dSep_reduce(g: "pyAgrum.BayesNet", interest: NodeSet = None) -> "pyAgrum.DAG":
-    //   """
-    //   Reduce a BN by removing barren nodes w.r.t a set of nodes.
+    /**
+     * @brief Reduce a BN by removing barren nodes w.r.t a set of nodes.
+     * 
+     * @tparam GUM_SCALAR 
+     * @param g the source
+     * @param interest the nodes of interest
+     * @return DAG the reduced DAG
+     */
+    template<typename GUM_SCALAR>
+    DAG dSep_reduce(const BayesNet<GUM_SCALAR>& g, const NodeSet& interest){
+        const auto barren = barren_nodes(g, interest);
+        // auto reduced_g = 
+    }
 
-    //   Parameters
-    //   ----------
-    //   g : pyAgrum.BayesNet
-    //     the source
-    //   interest: NodeSet
-    //     the nodes of interest
-
-    //   Returns
-    //   -------
-    //   pyAgrum.DAG
-    //     the reduced DAG
-    //   """
-    //   if interest is None:
-    //     interest = set()
+    // TODO:
 
     //   barren = _barren_nodes(g, interest)
 

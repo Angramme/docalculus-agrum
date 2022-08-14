@@ -101,6 +101,7 @@ namespace gum{
      */
     template<typename GUM_SCALAR>
     const gum::NodeSet* nodes_on_dipath(const BayesNet<GUM_SCALAR>& bn, NodeId x, NodeId y);
+    // TODO:
     //   def inner_nod(g: "pyAgrum.BayesNet", a: NodeId, b: NodeId) -> Optional[NodeSet]:
     //     if b == a:
     //       return set()

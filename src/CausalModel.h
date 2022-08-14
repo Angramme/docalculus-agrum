@@ -32,7 +32,7 @@ namespace gum{
       * @author Kacper Ozieblowski
       */
    template <typename GUM_SCALAR>
-   class CausalModel : public DAGmodel {
+   class CausalModel : public DAGmodel { // TODO: overrite all the other methods of DAGmodel and it's base class etc... !!!
    private:
       const gum::BayesNet<GUM_SCALAR>& _ob_BN_; ///< observational bayes net
       // self.__latentVarsDescriptor = latentVarsDescriptor
@@ -46,6 +46,8 @@ namespace gum{
                const std::vector<std::pair<std::string, std::vector<gum::NodeId>>>& latentVarDescriptors = {},
                bool keepArcs = false
                );
+
+      // TODO : finish the copy constructor
 
       // CausalModel(const CausalModel& ot)
       //    : CausalModel(gum::BayesNet<GUM_SCALAR>(ot._ob_BN_), )
@@ -183,9 +185,9 @@ namespace gum{
       /**
        * @brief Return the set of nodes.
        * 
-       * @return const gum::NodeSet& 
+       * @return const gum::NodeGraphPart& 
        */
-      const gum::NodeSet& nodes() const ;
+      decltype(CausalModel<GUM_SCALAR>::_ca_BN_.nodes()) nodes() const ;
 
       /**
        * @brief Return the set of arcs.
@@ -195,11 +197,41 @@ namespace gum{
       const gum::ArcSet& arcs() const;
 
       /**
+       * @brief TODO
+       * 
+       * @return const gum::VariableNodeMap& 
+       */
+      const gum::VariableNodeMap& variableNodeMap() const; 
+
+      /**
+       * @brief TODO
+       * 
+       * @param x 
+       * @return const gum::DiscreteVariable& 
+       */
+      const gum::DiscreteVariable& variable(gum::NodeId x) const;
+
+      /**
+       * @brief TODO
+       * 
+       * @return gum::NodeId 
+       */
+      gum::NodeId nodeId(const gum::DiscreteVariable& x) const;
+
+      /**
+       * @brief TODO
+       * 
+       * @return const gum::DiscreteVariable& 
+       */
+      const gum::DiscreteVariable& variableFromName(const std::string& name) const;
+
+      /**
        * @brief Create a dot representation of the causal model.
        * 
        * @return std::string 
        */
       std::string toDot();
+      // TODO: 
       //   def toDot(self) -> str:
    //     """
    //     Create a dot representation of the causal model

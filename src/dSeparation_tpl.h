@@ -114,7 +114,7 @@ namespace gum{
         for(const auto& i : ancestors){
             G.addNodeWithId(i);
         }
-        auto se = G.nodes() - sx;
+        auto se = G.asNodeSet() - sx;
         for(const auto& b : se){
             for(const auto& a : bn.parents(b))
                 G.addEdge(a, b);
@@ -144,5 +144,43 @@ namespace gum{
             if(is_descendant(bn, x, c, marked)) return true;
         }
         return false;
+    }
+
+    template<typename GUM_SCALAR>
+    void _BN_inner_rec(NodeSet& s, NodeId a, const BayesNet<GUM_SCALAR>& bn, const NodeSet& interest){
+        if((interest + s).contains(a)) return;
+        s.insert(a);
+        for(const auto& b : bn.parents(a)){
+            if((bn.children(b) - s).empty() && !s.contains(b))
+                _BN_inner_rec(s, b, bn, interest);
+        }
+    }
+
+    template<typename GUM_SCALAR>
+    const NodeSet& barren_nodes(const BayesNet<GUM_SCALAR>& bn, const NodeSet& interest){
+        auto s = NodeSet();
+        
+        for(const auto& x : bn.nodes()){
+            if(bn.children(x).empty()) _BN_inner_rec(s, x, bn, interest);
+        }
+
+        return s;
+    }
+
+    template<typename GUM_SCALAR>
+    DAG partialDAGfromBN(const BayesNet<GUM_SCALAR>& bn, const NodeSet& nexcl){
+        auto d = DAG();
+
+        auto nodes = bn.nodes() - nexcl;
+        for(const auto& n : nodes){
+            d.addNodeWithId(n);
+        }
+
+        for(const auto& xy : bn.arcs()){
+            if(nodes.contains(xy.first()) && nodes.contains(xy.second())){
+                d.addArc(xy);
+            }
+        }
+        return d;
     }
 }
