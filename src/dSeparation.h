@@ -136,37 +136,6 @@ namespace gum{
     template<typename GUM_SCALAR>
     bool is_descendant(const BayesNet<GUM_SCALAR>& bn, NodeId x, NodeId y, const NodeSet& marked);
 
-
-    // def _filaires(bn: DirectedModel, interest: NodeSet = None, inf: bool = True) -> NodeSet:
-    //   s = set()
-
-    //   if interest is None:
-    //     interest = set()
-
-    //   for x in bn.nodes():
-    //     if len(set(bn.parents(x)) - s) == 0 and len(bn.children(x)) == 1 and x not in interest:
-    //       a = x
-    //       while True:
-    //         s.add(a)
-    //         for a in bn.children(a):
-    //           break  # take the first elt
-    //         if len(bn.children(a)) != 1 or len(set(bn.parents(a)) - s) != 0 or a in interest:
-    //           break
-
-    //     if inf and len(bn.children(x)) == 0 and len(bn.parents(x)) == 1 and x not in interest:
-    //       a = x
-    //       while True:
-    //         s.add(a)
-    //         for a in bn.parents(a):
-    //           break  # take the first elt
-    //         if len(bn.children(a)) != 1 or a in interest:
-    //           break
-    //         if len(bn.parents(a)) != 1:
-    //           s.add(a)
-    //           break
-    //   return s
-
-
     /**
      * @brief Returns the set of recursively determined barren nodes in 
      * ``bn`` relatively to the set of nodes ``interest`` (if ``interest`` 
@@ -193,6 +162,8 @@ namespace gum{
     DAG partialDAGfromBN(const BayesNet<GUM_SCALAR>& bn, const NodeSet& nexcl = {});
 
 
+    
+
     /**
      * @brief Reduce a BN by removing barren nodes w.r.t a set of nodes.
      * 
@@ -202,21 +173,7 @@ namespace gum{
      * @return DAG the reduced DAG
      */
     template<typename GUM_SCALAR>
-    DAG dSep_reduce(const BayesNet<GUM_SCALAR>& g, const NodeSet& interest){
-        const auto barren = barren_nodes(g, interest);
-        // auto reduced_g = 
-    }
-
-    // TODO:
-
-    //   barren = _barren_nodes(g, interest)
-
-    //   reduced_g = partialDAGFromBN(g, barren)
-
-    //   for f in _filaires(reduced_g, interest, False):
-    //     reduced_g.eraseNode(f)
-
-    //   return reduced_g
+    DAG dSep_reduce(const BayesNet<GUM_SCALAR>& g, const NodeSet& interest);
 
 
     // def _blocked(bn: "pyAgrum.BayesNet", pht: bool, x: NodeSet, y: NodeSet, setz: NodeSet,

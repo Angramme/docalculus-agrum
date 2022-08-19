@@ -167,6 +167,7 @@ namespace gum{
         return s;
     }
 
+
     template<typename GUM_SCALAR>
     DAG partialDAGfromBN(const BayesNet<GUM_SCALAR>& bn, const NodeSet& nexcl){
         auto d = DAG();
@@ -183,4 +184,28 @@ namespace gum{
         }
         return d;
     }
+
+
+    NodeSet _filaires(const DAG& bn, const NodeSet& interest, bool inf);
+
+    template<typename GUM_SCALAR>
+    DAG dSep_reduce(const BayesNet<GUM_SCALAR>& g, const NodeSet& interest){
+        const auto barren = barren_nodes(g, interest);
+        auto reduced_g = partialDAGfromBN(g, barren);
+        for(const auto& f : _filaires(reduced_g, interest, false))
+            reduced_g.eraseNode(f);
+
+        return reduced_g;
+    }
+
+    // TODO:
+
+    //   barren = _barren_nodes(g, interest)
+
+    //   reduced_g = partialDAGFromBN(g, barren)
+
+    //   for f in _filaires(reduced_g, interest, False):
+    //     reduced_g.eraseNode(f)
+
+    //   return reduced_g
 }

@@ -7,6 +7,7 @@
 #include "dSeparation.h"
 #include "doCalculus.h"
 #include "doAST.h"
+#include <memory>
 
 using namespace gum;
 
@@ -34,9 +35,24 @@ int main(void) {
 
 
   // TESTS
-  // ASTBinaryOp test("hello 3", std::make_unique<ASTtree>("hello 1 "), std::make_unique<ASTtree>("hello 2"));
+  // auto test = ASTsum<double>(
+  //   {"aa", "bb", "cc"}, 
+  //   std::make_unique<ASTJointProba<double>>(
+  //     std::make_unique<NameSet>({"pp1", "pp2"})
+  //     ));
+  // auto ns = std::shared_ptr<NameSet>(new Set<std::string>({"pp1", "pp2"}));
+  auto jp = std::make_unique<ASTJointProba<double>>(
+      std::shared_ptr<NameSet>(new Set<std::string>({"pp1", "pp2"})));
+  // std::cout << *jp << std::endl;
 
-  // std::cout << "\n\n test begins here: " << std::endl;
+  auto jp2 = *jp;
+
+  // auto test = ASTsum<double>({"aa", "bb", "cc"}, std::move(jp));
   // std::cout << test << std::endl;
-  //
+
+  // std::vector<std::unique_ptr<ASTJointProba<double>>> xs = std::vector({std::make_unique<ASTJointProba<double>>(jp2)});
+  // productOfTrees<double, decltype(xs.begin())>(xs.begin(), xs.end());
+
+
+  return 0;
 }

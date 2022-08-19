@@ -30,4 +30,32 @@ namespace gum{
             gg.eraseNode(node);
         }
     }
+
+    NodeSet _filaires(const DAG& bn, const NodeSet& interest, bool inf){
+        auto s = NodeSet();
+
+        for(const auto& x : bn.nodes()){
+            if((bn.parents(x) - s).size() == 0 && bn.children(x).size() == 1 && !interest.contains(x)){
+                auto a = x;
+                do{
+                    s.insert(a);
+                    a = *bn.children(a).begin();
+                }
+                while(bn.children(a).size() == 1 && (bn.parents(a) - s).size() == 0 && !interest.contains(a));
+            }
+            if(inf && bn.children(x).size() == 0 && bn.parents(x).size() == 1 && !interest.contains(x)){
+                auto a = x;
+                while(true){
+                    s.insert(a);
+                    a = *bn.parents(a).begin();
+                    if(bn.children(a).size() != 1 || interest.contains(a)) break;
+                    if(bn.parents(a).size() != 1){
+                        s.insert(a);
+                        break;
+                    }
+                }
+            }
+        }
+        return s;
+    }
 }
