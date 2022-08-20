@@ -41,18 +41,21 @@ int main(void) {
   //     std::make_unique<NameSet>({"pp1", "pp2"})
   //     ));
   // auto ns = std::shared_ptr<NameSet>(new Set<std::string>({"pp1", "pp2"}));
-  auto jp = std::make_unique<ASTJointProba<double>>(
-      std::shared_ptr<NameSet>(new Set<std::string>({"pp1", "pp2"})));
+  // auto jp = std::make_unique<ASTJointProba<double>>(
+  //     std::shared_ptr<NameSet>(new Set<std::string>({"pp1", "pp2"})));
   // std::cout << *jp << std::endl;
 
-  auto jp2 = *jp;
+  // auto jp2 = *jp;
 
   // auto test = ASTsum<double>({"aa", "bb", "cc"}, std::move(jp));
   // std::cout << test << std::endl;
 
-  // std::vector<std::unique_ptr<ASTJointProba<double>>> xs = std::vector({std::make_unique<ASTJointProba<double>>(jp2)});
-  // productOfTrees<double, decltype(xs.begin())>(xs.begin(), xs.end());
-
+  auto xs = std::vector<std::unique_ptr<ASTtree<double>>>();
+  xs.emplace_back(std::make_unique<ASTJointProba<double>>(
+      std::shared_ptr<NameSet>(new Set<std::string>({"pp1", "pp2"}))));
+  xs.emplace_back(std::make_unique<ASTJointProba<double>>(
+      std::shared_ptr<NameSet>(new Set<std::string>({"pp3", "pp4"}))));
+  auto ret = productOfTrees(xs);
 
   return 0;
 }

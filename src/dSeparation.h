@@ -175,47 +175,25 @@ namespace gum{
     template<typename GUM_SCALAR>
     DAG dSep_reduce(const BayesNet<GUM_SCALAR>& g, const NodeSet& interest);
 
-
-    // def _blocked(bn: "pyAgrum.BayesNet", pht: bool, x: NodeSet, y: NodeSet, setz: NodeSet,
-    //              marquage0: Set[int],
-    //              marquage1: Set[int]) -> bool:
-    //   """
-    //   internal method to check if a path is blocked
-    //   """
-    //   if x in y:
-    //     return False
-
-    //   isInxZ = x in setz
-    //   wasIn = x in marquage0 or x in marquage1
-
-    //   if pht:
-    //     marquage1.add(x)
-    //   else:
-    //     marquage0.add(x)
-
-    //   if not isInxZ and not wasIn:
-    //     for c in bn.children(x):
-    //       if c not in marquage1 and not _blocked(bn, True, c, y, setz, marquage0, marquage1):
-    //         return False
-
-    //   if pht:
-    //     if isInxZ or len(setz & descendants(bn, x)) != 0:
-    //       for p in bn.parents(x):
-    //         if p not in marquage0 and not _blocked(bn, False, p, y, setz, marquage0, marquage1):
-    //           return False
-
-    //   else:
-    //     if not isInxZ:
-    //       for p in bn.parents(x):
-    //         if p not in marquage0 and not _blocked(bn, False, p, y, setz, marquage0, marquage1):
-    //           return False
-
-    //   return True
-
-
-    // def _isDSep_tech1_parents(bn: "pyAgrum.BayesNet", x: NodeId, sy: NodeSet, zset: NodeSet, reduced: bool = False) -> bool:
-    //   """ Test of d-separation of ``x`` and ``y`` given ``Z``, considering only the paths with an arc coming into ``x``
-    //   using the usual paths method"""
+    /**
+     * @brief Test of d-separation of ``x`` and ``y`` given ``Z``, considering 
+     * only the paths with an arc coming into ``x`` using the usual paths method 
+     * 
+     * @tparam GUM_SCALAR 
+     * @param bn 
+     * @param x 
+     * @param sy 
+     * @param zset 
+     * @param reduced 
+     * @return true 
+     * @return false 
+     */
+    template<typename GUM_SCALAR>
+    bool _isDSep_tech1_parents(const BayesNet<GUM_SCALAR>& bn, NodeId x, const NodeSet& sy, const NodeSet& zset, bool reduced = false){
+        if(!reduced && bn.nodes().size() > 170){
+            
+        }
+    }
 
     //   if not reduced and len(bn.nodes()) > 170:
     //     g = dSep_reduce(bn, sy | zset | {x})

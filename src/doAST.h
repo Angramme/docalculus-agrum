@@ -87,7 +87,7 @@ namespace gum{
          * @param nameOccur the number of occurences of each variable
          * @return std::string the LaTeX representation pf the tree
          */
-        std::string toLatex(const NameCounter& nameOccur) const;
+        std::string toLatex(NameCounter* nameOccur) const;
 
         /**
          * @brief Evaluation of a AST tree from inside a BN
@@ -98,7 +98,6 @@ namespace gum{
         virtual Potential<GUM_SCALAR> eval(const BayesNet<GUM_SCALAR>& bn) const = 0;
 
         virtual void _print_(std::ostream& outs, int indent) const = 0;
-    protected:
 
         /**
          * @brief internal conversion to latex, internal precedence rules can 
@@ -107,8 +106,9 @@ namespace gum{
          * @param nameOccur 
          * @return std::string 
          */
-        virtual std::string _to_latex_(NameCounter&& nameOccur) const = 0;
+        virtual std::string _to_latex_(NameCounter* nameOccur = nullptr) const = 0;
 
+    protected:
         /**
          * @brief internal conversion to latex, resistant to internal precedcedence 
          * breaking it
@@ -116,7 +116,7 @@ namespace gum{
          * @param nameOccur 
          * @return std::string 
          */
-        virtual std::string _to_latex_indep_(NameCounter&& nameOccur) const = 0;
+        virtual std::string _to_latex_indep_(NameCounter* nameOccur = nullptr) const = 0;
 
         /**
          * @brief Change the latex representation of a variable w.r.t the number of 
@@ -127,7 +127,7 @@ namespace gum{
          * each variable (default value 0 if the variable is not a key in this dict)
          * @return constexpr std::string the presented name
          */
-        constexpr static std::string _latext_var_present_(const std::string& src, const NameCounter& nameOccur); 
+        constexpr static std::string _latext_var_present_(const std::string& src, NameCounter* nameOccur = nullptr); 
         
         /**
          * @brief Change the latex representation of variables w.r.t the number of 
@@ -138,7 +138,7 @@ namespace gum{
          * each variable (default value 0 if the variable is not a key in this dict)
          * @return constexpr std::string the presented names
          */
-        constexpr static std::vector<std::string> _latext_var_present_(const std::vector<std::string>& src, const NameCounter& nameOccur); 
+        constexpr static std::vector<std::string> _latext_var_present_(const std::vector<std::string>& src, NameCounter* nameOccur = nullptr); 
 
         /**
          * @brief Change the latex representation of variables w.r.t the number of 
@@ -149,7 +149,7 @@ namespace gum{
          * each variable (default value 0 if the variable is not a key in this dict)
          * @return constexpr std::string the presented names
          */
-        constexpr static std::vector<std::string> _latext_var_present_(const Set<std::string>& src, const NameCounter& nameOccur); 
+        constexpr static std::vector<std::string> _latext_var_present_(const Set<std::string>& src, NameCounter* nameOccur = nullptr); 
         
         /**
          * @brief Change the latex representation of variables w.r.t the number of 
@@ -161,7 +161,7 @@ namespace gum{
          * @return constexpr std::string the presented names
          */
         template<typename Iter>
-        constexpr static std::vector<std::string> _latext_var_present_(Iter b_src, Iter e_src, const NameCounter& nameOccur); 
+        constexpr static std::vector<std::string> _latext_var_present_(Iter b_src, Iter e_src, NameCounter* nameOccur = nullptr); 
     };   // TODO : finish
 
 
@@ -172,7 +172,7 @@ namespace gum{
      */
     template<typename GUM_SCALAR>
     class ASTBinaryOp : public ASTtree<GUM_SCALAR> {
-    private:
+    protected:
         std::unique_ptr<ASTtree<GUM_SCALAR>> _op1_;
         std::unique_ptr<ASTtree<GUM_SCALAR>> _op2_;
     public:
@@ -241,8 +241,8 @@ namespace gum{
         virtual Potential<GUM_SCALAR> eval(const BayesNet<GUM_SCALAR>& bn) const override;
 
     protected:
-        virtual std::string _to_latex_(NameCounter&& nameOccur) const override;
-        virtual std::string _to_latex_indep_(NameCounter&& nameOccur) const override;
+        virtual std::string _to_latex_(NameCounter* nameOccur = nullptr) const override;
+        virtual std::string _to_latex_indep_(NameCounter* nameOccur = nullptr) const override;
     };
 
     // TODO
@@ -274,8 +274,8 @@ namespace gum{
         virtual Potential<GUM_SCALAR> eval(const BayesNet<GUM_SCALAR>& bn) const override;
 
     protected:
-        virtual std::string _to_latex_(NameCounter&& nameOccur) const override;
-        virtual std::string _to_latex_indep_(NameCounter&& nameOccur) const override;
+        virtual std::string _to_latex_(NameCounter* nameOccur = nullptr) const override;
+        virtual std::string _to_latex_indep_(NameCounter* nameOccur = nullptr) const override;
     };
 
     //   def copy(self) -> "ASTtree":
@@ -307,8 +307,8 @@ namespace gum{
         virtual Potential<GUM_SCALAR> eval(const BayesNet<GUM_SCALAR>& bn) const override;
 
     protected:
-        virtual std::string _to_latex_(NameCounter&& nameOccur) const override;
-        virtual std::string _to_latex_indep_(NameCounter&& nameOccur) const override;
+        virtual std::string _to_latex_(NameCounter* nameOccur = nullptr) const override;
+        virtual std::string _to_latex_indep_(NameCounter* nameOccur = nullptr) const override;
     };
 
     //   def copy(self) -> "ASTtree":
@@ -339,8 +339,8 @@ namespace gum{
         virtual Potential<GUM_SCALAR> eval(const BayesNet<GUM_SCALAR>& bn) const override;
 
     protected:
-        virtual std::string _to_latex_(NameCounter&& nameOccur) const override;
-        virtual std::string _to_latex_indep_(NameCounter&& nameOccur) const override;
+        virtual std::string _to_latex_(NameCounter* nameOccur = nullptr) const override;
+        virtual std::string _to_latex_indep_(NameCounter* nameOccur = nullptr) const override;
     };
 
     //   def copy(self) -> "ASTtree":
@@ -400,8 +400,8 @@ namespace gum{
 
         virtual void _print_(std::ostream& outs, int indent) const;
     protected:
-        virtual std::string _to_latex_(NameCounter&& nameOccur) const override;
-        virtual std::string _to_latex_indep_(NameCounter&& nameOccur) const override;
+        virtual std::string _to_latex_(NameCounter* nameOccur = nullptr) const override;
+        virtual std::string _to_latex_indep_(NameCounter* nameOccur = nullptr) const override;
     };
 
 //   def copy(self) -> "ASTtree":
@@ -442,8 +442,8 @@ namespace gum{
 
         virtual void _print_(std::ostream& outs, int indent) const override;
     protected:
-        virtual std::string _to_latex_(NameCounter&& nameOccur) const override;
-        virtual std::string _to_latex_indep_(NameCounter&& nameOccur) const override;    
+        virtual std::string _to_latex_(NameCounter* nameOccur = nullptr) const override;
+        virtual std::string _to_latex_indep_(NameCounter* nameOccur = nullptr) const override;    
     };
 
 //   def copy(self) -> "ASTtree":
@@ -516,8 +516,8 @@ namespace gum{
 
         virtual void _print_(std::ostream& outs, int indent) const override;
     protected: 
-        virtual std::string _to_latex_(NameCounter&& nameOccur) const override;
-        virtual std::string _to_latex_indep_(NameCounter&& nameOccur) const override;    
+        virtual std::string _to_latex_(NameCounter* nameOccur = nullptr) const override;
+        virtual std::string _to_latex_indep_(NameCounter* nameOccur = nullptr) const override;    
     };
 
 //   def copy(self) -> "ASTtree":
@@ -554,7 +554,29 @@ namespace gum{
      */
     // template<typename GUM_SCALAR, typename Iter>
     template<typename GUM_SCALAR, typename Iter>
-    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(Iter begin, Iter end);
+    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTreesI(Iter begin, Iter end);
+    
+    /**
+     * @brief create an ASTtree for a sequence of multiplications of ASTtree
+     * 
+     * @tparam GUM_SCALAR 
+     * @param xs the trees (as unique_ptr<ASTtree>) to multiply
+     * @return ASTtree<GUM_SCALAR>  the ASTtree representing the tree of multiplications
+     */
+    // template<typename GUM_SCALAR, typename Iter>
+    template<typename GUM_SCALAR>
+    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(std::vector<std::unique_ptr<ASTtree<GUM_SCALAR>>>& xs);
+    
+    /**
+     * @brief create an ASTtree for a sequence of multiplications of ASTtree
+     * 
+     * @tparam GUM_SCALAR 
+     * @param xs the trees (as unique_ptr<ASTtree>) to multiply
+     * @return ASTtree<GUM_SCALAR>  the ASTtree representing the tree of multiplications
+     */
+    // template<typename GUM_SCALAR, typename Iter>
+    template<typename GUM_SCALAR>
+    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(Set<std::unique_ptr<ASTtree<GUM_SCALAR>>>& xs);
 }
 
 /**

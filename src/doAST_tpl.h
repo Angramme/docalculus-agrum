@@ -5,6 +5,12 @@
 #include <agrum/tools/core/set.h>
 #include <agrum/BN/inference/lazyPropagation.h>
 
+
+template<typename GUM_SCALAR>
+std::ostream& operator<< ( std::ostream& outs, const gum::ASTtree<GUM_SCALAR>& p ){
+    p._print_(outs, 0);
+    return outs;
+}
 namespace gum{
     template<typename GUM_SCALAR>
     std::string ASTtree<GUM_SCALAR>::_continueNextLine_ = "| ";
@@ -28,9 +34,9 @@ namespace gum{
 
     template<typename GUM_SCALAR>
     constexpr std::string ASTtree<GUM_SCALAR>::_latext_var_present_(
-        const std::string& src, const NameCounter& nameOccur)
+        const std::string& src, NameCounter* nameOccur)
     {
-        const size_t nbr = std::max((size_t)0, nameOccur[src] - 1);
+        const size_t nbr = nameOccur ? std::max((size_t)0, (*nameOccur)[src] - 1) : 0;
         std::string ret = src;
         for(size_t i=0; i<nbr; i++) ret += "'";
         return ret;
@@ -39,7 +45,7 @@ namespace gum{
     template<typename GUM_SCALAR> 
     template<typename Iter>
     constexpr std::vector<std::string> ASTtree<GUM_SCALAR>::_latext_var_present_(
-        Iter b_src, Iter e_src, const NameCounter& nameOccur)
+        Iter b_src, Iter e_src, NameCounter* nameOccur)
     {
         auto vs = std::vector<std::string>(std::distance(b_src, e_src));
         size_t i = 0;
@@ -49,17 +55,17 @@ namespace gum{
 
     template<typename GUM_SCALAR>
     constexpr std::vector<std::string> ASTtree<GUM_SCALAR>::_latext_var_present_(
-        const std::vector<std::string>& src, const NameCounter& nameOccur)
+        const std::vector<std::string>& src, NameCounter* nameOccur)
     { return _latext_var_present_(src.cbegin(), src.cend(), nameOccur); }
 
     template<typename GUM_SCALAR>
     constexpr std::vector<std::string> ASTtree<GUM_SCALAR>::_latext_var_present_(
-        const Set<std::string>& src, const NameCounter& nameOccur)
+        const Set<std::string>& src, NameCounter* nameOccur)
     { return _latext_var_present_(src.cbegin(), src.cend(), nameOccur); }
 
     template<typename GUM_SCALAR>
     ASTBinaryOp<GUM_SCALAR>::ASTBinaryOp(const std::string& typ, std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2)
-        : ASTtree(typ), _op1_(std::move(op1)), _op2_(std::move(op2))
+        : ASTtree<GUM_SCALAR>(typ), _op1_(std::move(op1)), _op2_(std::move(op2))
     {}
 
     template<typename GUM_SCALAR>
@@ -68,102 +74,102 @@ namespace gum{
         outs << this->type() << std::endl;
         this->op1()._print_(outs, indent + 1);
         outs << std::endl;
-        this->op1()._print_(outs, indent + 1);
+        this->op2()._print_(outs, indent + 1);
     }
 
     template<typename GUM_SCALAR>
     ASTplus<GUM_SCALAR>::ASTplus(std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2)
-        : ASTBinaryOp("+", std::move(op1), std::move(op2))
+        : ASTBinaryOp<GUM_SCALAR>("+", std::move(op1), std::move(op2))
     {}
 
     template<typename GUM_SCALAR>
     Potential<GUM_SCALAR> ASTplus<GUM_SCALAR>::eval(const BayesNet<GUM_SCALAR>& bn) const {
         using namespace std;
         if(this->_verbose_) cout << "EVAL operation + " << endl;
-        auto res = this->_op1_.eval(bn) + this->_op2_.eval(bn);
+        auto res = this->_op1_->eval(bn) + this->_op2_->eval(bn);
         if(this->_verbose_) cout << "END OF EVAL operation + : " << res << endl;
         return res;
     }
 
     template<typename GUM_SCALAR>
-    std::string ASTplus<GUM_SCALAR>::_to_latex_(NameCounter&& nameOccur) const {
-        return this->_op1_._to_latex_(nameOccur) + "+" + this->_op2_._to_latex_(nameOccur);
+    std::string ASTplus<GUM_SCALAR>::_to_latex_(NameCounter* nameOccur) const {
+        return this->_op1_->_to_latex_(nameOccur) + "+" + this->_op2_->_to_latex_(nameOccur);
     }
 
     template<typename GUM_SCALAR>
-    std::string ASTplus<GUM_SCALAR>::_to_latex_indep_(NameCounter&& nameOccur) const {
+    std::string ASTplus<GUM_SCALAR>::_to_latex_indep_(NameCounter* nameOccur) const {
         return "\\left("+_to_latex_(nameOccur)+"\\right)";
     }
 
     template<typename GUM_SCALAR>
     ASTminus<GUM_SCALAR>::ASTminus(std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2)
-        : ASTBinaryOp("-", std::move(op1), std::move(op2))
+        : ASTBinaryOp<GUM_SCALAR>("-", std::move(op1), std::move(op2))
     {}
 
     template<typename GUM_SCALAR>
     Potential<GUM_SCALAR> ASTminus<GUM_SCALAR>::eval(const BayesNet<GUM_SCALAR>& bn) const {
         using namespace std;
         if(this->_verbose_) cout << "EVAL operation - " << endl;
-        auto res = this->_op1_.eval(bn) - this->_op2_.eval(bn);
+        auto res = this->_op1_->eval(bn) - this->_op2_->eval(bn);
         if(this->_verbose_) cout << "END OF EVAL operation - : " << res << endl;
         return res;
     }
 
     template<typename GUM_SCALAR>
-    std::string ASTminus<GUM_SCALAR>::_to_latex_(NameCounter&& nameOccur) const {
-        return this->_op1_._to_latex_(nameOccur) + "-" + this->_op2_._to_latex_(nameOccur);
+    std::string ASTminus<GUM_SCALAR>::_to_latex_(NameCounter* nameOccur) const {
+        return this->_op1_->_to_latex_(nameOccur) + "-" + this->_op2_->_to_latex_(nameOccur);
     }
 
     template<typename GUM_SCALAR>
-    std::string ASTminus<GUM_SCALAR>::_to_latex_indep_(NameCounter&& nameOccur) const {
+    std::string ASTminus<GUM_SCALAR>::_to_latex_indep_(NameCounter* nameOccur) const {
         return "\\left("+_to_latex_(nameOccur)+"\\right)";
     }
 
     template<typename GUM_SCALAR>
     ASTmult<GUM_SCALAR>::ASTmult(std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2)
-        : ASTBinaryOp("*", std::move(op1), std::move(op2))
+        : ASTBinaryOp<GUM_SCALAR>("*", std::move(op1), std::move(op2))
     {}
 
     template<typename GUM_SCALAR>
     Potential<GUM_SCALAR> ASTmult<GUM_SCALAR>::eval(const BayesNet<GUM_SCALAR>& bn) const {
         using namespace std;
         if(this->_verbose_) cout << "EVAL operation * " << endl;
-        auto res = this->_op1_.eval(bn) * this->_op2_.eval(bn);
+        auto res = this->_op1_->eval(bn) * this->_op2_->eval(bn);
         if(this->_verbose_) cout << "END OF EVAL operation * : " << res << endl;
         return res;
     }
 
     template<typename GUM_SCALAR>
-    std::string ASTmult<GUM_SCALAR>::_to_latex_(NameCounter&& nameOccur) const {
-        return this->_op1_._to_latex_(nameOccur) + "\\cdot" + this->_op2_._to_latex_(nameOccur);
+    std::string ASTmult<GUM_SCALAR>::_to_latex_(NameCounter* nameOccur) const {
+        return this->_op1_->_to_latex_(nameOccur) + "\\cdot" + this->_op2_->_to_latex_(nameOccur);
     }
 
     template<typename GUM_SCALAR>
-    std::string ASTmult<GUM_SCALAR>::_to_latex_indep_(NameCounter&& nameOccur) const {
+    std::string ASTmult<GUM_SCALAR>::_to_latex_indep_(NameCounter* nameOccur) const {
         return _to_latex_(nameOccur);
     }
 
     template<typename GUM_SCALAR>
     ASTdiv<GUM_SCALAR>::ASTdiv(std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2)
-        : ASTBinaryOp("/", std::move(op1), std::move(op2))
+        : ASTBinaryOp<GUM_SCALAR>("/", std::move(op1), std::move(op2))
     {}
 
     template<typename GUM_SCALAR>
     Potential<GUM_SCALAR> ASTdiv<GUM_SCALAR>::eval(const BayesNet<GUM_SCALAR>& bn) const {
         using namespace std;
         if(this->_verbose_) cout << "EVAL operation / " << endl;
-        auto res = this->_op1_.eval(bn) / this->_op2_.eval(bn);
+        auto res = this->_op1_->eval(bn) / this->_op2_->eval(bn);
         if(this->_verbose_) cout << "END OF EVAL operation / : " << res << endl;
         return res;
     }
 
     template<typename GUM_SCALAR>
-    std::string ASTdiv<GUM_SCALAR>::_to_latex_(NameCounter&& nameOccur) const {
-        return " \\frac{" + this->_op1_._to_latex_(nameOccur) + "}{" + this->_op2_._to_latex_(nameOccur) + "}";
+    std::string ASTdiv<GUM_SCALAR>::_to_latex_(NameCounter* nameOccur) const {
+        return " \\frac{" + this->_op1_->_to_latex_(nameOccur) + "}{" + this->_op2_->_to_latex_(nameOccur) + "}";
     }
 
     template<typename GUM_SCALAR>
-    std::string ASTdiv<GUM_SCALAR>::_to_latex_indep_(NameCounter&& nameOccur) const {
+    std::string ASTdiv<GUM_SCALAR>::_to_latex_indep_(NameCounter* nameOccur) const {
         return _to_latex_(nameOccur);
     }
 
@@ -205,7 +211,7 @@ namespace gum{
     }
 
     template<typename GUM_SCALAR>
-    std::string ASTPosteriorProba<GUM_SCALAR>::_to_latex_(NameCounter&& nameOccur) const {
+    std::string ASTPosteriorProba<GUM_SCALAR>::_to_latex_(NameCounter* nameOccur) const {
         auto ss = std::stringstream();
         ss << "P\\left(";
         ___sort_comma_push_stream(ss, _latext_var_present_(vars(), nameOccur));
@@ -219,7 +225,7 @@ namespace gum{
     }
 
     template<typename GUM_SCALAR>
-    std::string ASTPosteriorProba<GUM_SCALAR>::_to_latex_indep_(NameCounter&& nameOccur) const {
+    std::string ASTPosteriorProba<GUM_SCALAR>::_to_latex_indep_(NameCounter* nameOccur) const {
         return _to_latex_(nameOccur);
     }
 
@@ -266,7 +272,7 @@ namespace gum{
     template<typename GUM_SCALAR>
     Potential<GUM_SCALAR> ASTJointProba<GUM_SCALAR>::eval(const BayesNet<GUM_SCALAR>& bn) const {
         using namespace std;
-        if(this->getVerbosity()) cout << "EVAL $" << _to_latex_(NameCounter({})) << "$ in context" << endl;
+        if(this->getVerbosity()) cout << "EVAL $" << _to_latex_() << "$ in context" << endl;
         auto ie = LazyPropagation<GUM_SCALAR>(&bn);
         Potential<GUM_SCALAR> res;
         auto varIds = NodeSet();
@@ -281,7 +287,7 @@ namespace gum{
             res = ie.posterior(name);
         }
 
-        if(this->getVerbosity()) cout << "END OF EVAL $" << _to_latex_(NameCounter({})) << "$ : " << res << endl;
+        if(this->getVerbosity()) cout << "END OF EVAL $" << _to_latex_() << "$ : " << res << endl;
 
         return res;
     }
@@ -295,7 +301,7 @@ namespace gum{
     }
     
     template<typename GUM_SCALAR>
-    std::string ASTJointProba<GUM_SCALAR>::_to_latex_(NameCounter&& nameOccur) const {
+    std::string ASTJointProba<GUM_SCALAR>::_to_latex_(NameCounter* nameOccur) const {
         auto ss = std::stringstream();
         ss << "P\\left(";
         ___sort_comma_push_stream(ss, this->_latext_var_present_(vars(), nameOccur));
@@ -304,8 +310,8 @@ namespace gum{
     }
     
     template<typename GUM_SCALAR>
-    std::string ASTJointProba<GUM_SCALAR>::_to_latex_indep_(NameCounter&& nameOccur) const {
-        return _to_latex_(NameCounter(nameOccur));
+    std::string ASTJointProba<GUM_SCALAR>::_to_latex_indep_(NameCounter* nameOccur) const {
+        return _to_latex_(nameOccur);
     }
 
 
@@ -330,9 +336,9 @@ namespace gum{
     template<typename GUM_SCALAR>
     Potential<GUM_SCALAR> ASTsum<GUM_SCALAR>::eval(const BayesNet<GUM_SCALAR>& bn) const{
         using namespace std;
-        if(this->getVerbosity()) cout << "EVAL $" << _to_latex_(NameCounter({})) << "$" << endl;
+        if(this->getVerbosity()) cout << "EVAL $" << _to_latex_() << "$" << endl;
         const auto res = term().eval(bn).margSumOut(Set({&bn.variable(var())}));
-        if(this->getVerbosity()) cout << "END OF EVAL $" << _to_latex_(NameCounter({})) << "$ : " << res << endl;
+        if(this->getVerbosity()) cout << "END OF EVAL $" << _to_latex_() << "$ : " << res << endl;
         return res;
     }
 
@@ -354,7 +360,7 @@ namespace gum{
     }
 
     template<typename GUM_SCALAR>
-    std::string ASTsum<GUM_SCALAR>::_to_latex_(NameCounter&& nameOccur) const{
+    std::string ASTsum<GUM_SCALAR>::_to_latex_(NameCounter* nameOccur) const{
         auto L = std::vector<std::string>();
         const ASTtree<GUM_SCALAR>* cur = this;
         while(cur->type() == this->type()){
@@ -370,40 +376,43 @@ namespace gum{
         cur->_print_(ss, 0);
         ss << "}";
 
-        for(const auto& v : L) nameOccur[v] -= 1;
+        for(const auto& v : L) (*nameOccur)[v] -= 1;
 
         return ss.str();
     }
 
     template<typename GUM_SCALAR>
-    std::string ASTsum<GUM_SCALAR>::_to_latex_indep_(NameCounter&& nameOccur) const{
-        return "\\left(" + _to_latex_((NameCounter)nameOccur) + "\\right)";
+    std::string ASTsum<GUM_SCALAR>::_to_latex_indep_(NameCounter* nameOccur) const{
+        return "\\left(" + _to_latex_(nameOccur) + "\\right)";
     }
 
     template<typename GUM_SCALAR, typename Iter>
-    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(Iter begin, Iter end){
-        return (std::unique_ptr<ASTtree<GUM_SCALAR>>)nullptr;
-        // return std::move(*begin);
-        // using namespace std;
-        // if(begin+1 == end) return *begin;
-        // return ASTmult(std::move(*begin), std::unique_ptr<ASTtree<GUM_SCALAR>>(productOfTrees(begin+1, end)));
+    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTreesI(Iter begin, Iter end){
+        if(begin+1 == end) return std::move(*begin);
+        return std::make_unique<ASTmult<GUM_SCALAR>>(std::move(*begin), std::move(productOfTreesI<GUM_SCALAR, Iter>(begin+1, end)));
     }
 
-    // template<typename GUM_SCALAR>
-    // ASTtree<GUM_SCALAR> productOfTrees(std::vector<std::unique_ptr<gum::ASTtree<double>, std::default_delete<gum::ASTtree<double>>>, std::allocator<std::unique_ptr<gum::ASTtree<double>, std::default_delete<gum::ASTtree<double>>>>>& xs){
-    //     return productOfTrees(xs.begin(), xs.end());
-    // }
-
-    // template<typename GUM_SCALAR>
-    // ASTtree<GUM_SCALAR> productOfTrees(std::initializer_list<std::unique_ptr<ASTtree<GUM_SCALAR>>> xs){
-    //     return productOfTrees(xs.begin(), xs.end());
-    // }
-
-
     // INLINE templates
+
     template<typename GUM_SCALAR>
     INLINE
-    std::string ASTtree<GUM_SCALAR>::toLatex(const NameCounter& nameOccur) const {
+    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(std::vector<std::unique_ptr<ASTtree<GUM_SCALAR>>>& xs){
+        auto ret = productOfTreesI<GUM_SCALAR, decltype(xs.begin())>(xs.begin(), xs.end());
+        xs.clear();
+        return std::move(ret);
+    }
+
+    template<typename GUM_SCALAR>
+    INLINE
+    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(Set<std::unique_ptr<ASTtree<GUM_SCALAR>>>& xs){
+        auto ret = productOfTreesI<GUM_SCALAR, decltype(xs.begin())>(xs.begin(), xs.end());
+        xs.clear();
+        return std::move(ret);
+    }
+
+    template<typename GUM_SCALAR>
+    INLINE
+    std::string ASTtree<GUM_SCALAR>::toLatex(NameCounter* nameOccur) const {
         return this->_to_latex_(nameOccur);
     }
 
@@ -466,10 +475,4 @@ namespace gum{
     const NameSet& ASTJointProba<GUM_SCALAR>::vars() const{
         return *_varnames_;
     }
-}
-
-template<typename GUM_SCALAR>
-std::ostream& operator<< ( std::ostream& outs, const gum::ASTtree<GUM_SCALAR>& p ){
-    p._print_(outs, 0);
-    return outs;
 }
