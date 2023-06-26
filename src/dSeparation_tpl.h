@@ -212,31 +212,30 @@ namespace gum{
      * @return true 
      * @return false 
      */
-    // TODO: fix
-    // template<typename GUM_SCALAR>
-    // bool _blocked(const BayesNet<GUM_SCALAR>& bn, bool pht, const NodeSet& x, const NodeSet& y, const NodeSet& setz, NodeSet& marquage0, NodeSet& marquage1){
-    //     if(y.contains(x)) return false;
-    //     bool isInxZ = setz.contains(x);
-    //     bool wasIn = marquage0.contains(x) || marquage1.contains(x);
-    //     if(pht) marquage1.insert(x);
-    //     else marquague0.insert(x);
+    template<typename GUM_SCALAR>
+    bool _blocked(const BayesNet<GUM_SCALAR>& bn, bool pht, const NodeSet& x, const NodeSet& y, const NodeSet& setz, NodeSet& marquage0, NodeSet& marquage1){
+        if(y.contains(x)) return false;
+        bool isInxZ = setz.contains(x);
+        bool wasIn = marquage0.isSupersetOrEqual(x) || marquage1.isSupersetOrEqual(x);
+        if(pht) marquage1.insert(x);
+        else marquage0.insert(x);
 
-    //     if(!isInxZ && !wasIn){
-    //         for(const auto& c : bn.children(x)){
-    //             if(!marquage1.contains(c) && !_blocked(bn, true, x, y, setz, marquage0, marquage1))
-    //                 return false;
-    //         }
-    //     }
+        if(!isInxZ && !wasIn){
+            for(const auto& c : bn.children(x)){
+                if(!marquage1.contains(c) && !_blocked(bn, true, x, y, setz, marquage0, marquage1))
+                    return false;
+            }
+        }
 
-    //     if(
-    //         (pht && (isInxZ || (setz + bn.descendants(x)).size() != 0)) ||
-    //         (!pht && !isInxZ)
-    //     ){
-    //         for(const auto& p : bn.parents(x)){
-    //             if(!marquage0.contains(p) && !_blocked(bn, false, p, y, setz, marquage0, marquage1)) return false;
-    //         }
-    //     }
+        if(
+            (pht && (isInxZ || (setz + bn.descendants(x)).size() != 0)) ||
+            (!pht && !isInxZ)
+        ){
+            for(const auto& p : bn.parents(x)){
+                if(!marquage0.contains(p) && !_blocked(bn, false, p, y, setz, marquage0, marquage1)) return false;
+            }
+        }
 
-    //     return true;
-    // }
+        return true;
+    }
 }
