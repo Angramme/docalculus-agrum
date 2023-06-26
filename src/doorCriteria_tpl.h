@@ -84,88 +84,57 @@ namespace gum{
     }
 
     template<typename GUM_SCALAR>
-    const gum::NodeSet* inner_nod(BayesNet<GUM_SCALAR> bn, NodeId a, NodeId b){
-        if(a == b) return NodeSet();
-
-        auto inners = NodeSet({a});
+    std::unique_ptr<NodeSet> _NOD_inner_nod(BayesNet<GUM_SCALAR> bn, NodeId a, NodeId b){
+        if(a == b) return std::make_unique<NodeSet>();
+        auto inners = std::make_unique<NodeSet>({a});
+        auto chds = bn.children(a);
+        if(chds.size() == 0) return nullptr;
+        bool found = false;
+        for(const auto& c : chds){
+            auto s = _NOD_inner_nod(bn, c, b);
+            if(s){
+                found = true;
+                *inners += *s;
+            }
+        }
+        if(found) return std::move(inners);
+        return nullptr;
     }
 
     template<typename GUM_SCALAR>
-    const gum::NodeSet* nodes_on_dipath(const BayesNet<GUM_SCALAR>& bn, NodeId x, NodeId y){
-        
-    } // TODO:
-    //   def inner_nod(g: "pyAgrum.BayesNet", a: NodeId, b: NodeId) -> Optional[NodeSet]:
-    //     if b == a:
-    //       return set()
+    std::unique_ptr<NodeSet> nodes_on_dipath(const BayesNet<GUM_SCALAR>& bn, NodeId x, NodeId y){
+        auto r = _NOD_inner_nod(bn, x, y);
+        if(r) r.remove(x);
+        return std::move(r);
+    }
 
-    //     inners = {a}
-    //     children = g.children(a)
-    //     if len(children) == 0:
-    //       return None
+    template<typename GUM_SCALAR>
+    backdoor_iterator backdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_bd){
+        if(bn.parents(cause).size() == 0) return backdoor_iterator::end;
+        if(bn.isParent(effect, cause)) return backdoor_iterator::end;
 
-    //     found = False
-    //     for c in children:
-    //       s = inner_nod(g, c, b)
-    //       if s is not None:
-    //         found = True
-    //         inners |= s
-    //     if found:
-    //       return inners
-    //     return None
+        // simplify the graph
+        auto interest = NodeSet({cause, effect});
+        auto G = std::make_shared<DAG>(dSep_reduce(bn, interest));
 
-    //   r = inner_nod(bn, x, y)
-    //   if r:
-    //     r.remove(x)
-    //   return r
+        {
+            // removing the non connected in G without descendants
+            // GG is a trash graph just to find the disjointed nodes in G
+            auto GG = DiGraph(*G);
+            for(const auto& i : bn.descendants(cause, {})) GG.eraseNode(i);
 
+            // we only keep interesting connex components
+            for(const auto& nodes : GG.connectedComponents().values()){
+                if(!nodes.isdisjoint(interest)) continue;
+                for(const auto& n : nodes) G->eraseNode(n);
+            }
+        }
 
+        auto possible = G->nodes() - (bn.descendants(cause, {}) + interest + not_bd);
+        if(possible.size() == 0) return backdoor_iterator::end;
 
-    // std::vector<gum::NodeId> 
-
-    // def backdoor_generator(bn: "pyAgrum.BayesNet", cause: NodeId, effect: NodeId, not_bd: NodeSet = None):
-    //   """
-    //   Generates backdoor sets for the pair of nodes `(cause, effect)` in the graph `bn` excluding the nodes in the set
-    //   `not_bd` (optional)
-
-    //   Parameters
-    //   ----------
-    //   bn: pyAgrum.BayesNet
-    //   cause: int
-    //   effect: int
-    //   not_bd: Set[int] default=None
-
-    //   Yields
-    //   -------
-    //   List[int]
-    //     the different backdoors
-    //   """
-    //   if len(bn.parents(cause)) == 0:  # no parent of cause, no backdoor
-    //     return
-    //   if isParent(effect, cause, bn):  # causalDagFromBN(bn)):
-    //     return
-
-    //   if not_bd is None:
-    //     not_bd = set()
-
-    //   # simplifying the graph
-    //   interest = {cause, effect}
-    //   G = dSep_reduce(bn, interest)
-
-    //   # removing the non connected in G without descendants
-    //   # GG is a trash graph just to find the disjointed nodes in G
-    //   GG = pyAgrum.DiGraph(G)
-    //   for i in descendants(bn, cause, set()):
-    //     GG.eraseNode(i)
-
-    //   # we only keep interesting connex components
-    //   for nodes in GG.connectedComponents().values():
-    //     if nodes.isdisjoint(interest):
-    //       for n in nodes:
-    //         G.eraseNode(n)
-
-    //   possible = set(G.nodes()) - (descendants(bn, cause, set()) | interest | not_bd)
-    //   if len(possible) == 0:
-    //     return
+        return backdoor_iterator(G, possible);
+    }
 
     //   backdoors = set()
 
@@ -180,7 +149,10 @@ namespace gum{
     //         backdoors.add(sub)
     //         yield list(subset)
 
-    //     def frontdoor_generator(bn: "pyAgrum.BayesNet", x: NodeId, y: NodeId, not_fd: NodeSet = None):
+
+
+
+    // def frontdoor_generator(bn: "pyAgrum.BayesNet", x: NodeId, y: NodeId, not_fd: NodeSet = None):
     //   """
     //   Generates frontdoor sets for the pair of nodes `(x, y)` in the graph `bn` excluding the nodes in the set
     //   `not_fd` (optional)
