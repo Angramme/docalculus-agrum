@@ -1,6 +1,7 @@
 #include "doAST.h"
 #include <memory>
 #include <vector>
+#include <iterator>
 #include <sstream>
 #include <agrum/tools/core/set.h>
 #include <agrum/BN/inference/lazyPropagation.h>
@@ -43,8 +44,9 @@ namespace gum{
     }
 
     template<typename GUM_SCALAR> 
+    // template<std::input_iterator Iter, std::sentinel_for<Iter> Sen>
     template<typename Iter>
-    constexpr std::vector<std::string> ASTtree<GUM_SCALAR>::_latext_var_present_(
+    constexpr std::vector<std::string> ASTtree<GUM_SCALAR>::_latext_var_present_i_(
         Iter b_src, Iter e_src, NameCounter* nameOccur)
     {
         auto vs = std::vector<std::string>(std::distance(b_src, e_src));
@@ -56,12 +58,12 @@ namespace gum{
     template<typename GUM_SCALAR>
     constexpr std::vector<std::string> ASTtree<GUM_SCALAR>::_latext_var_present_(
         const std::vector<std::string>& src, NameCounter* nameOccur)
-    { return _latext_var_present_(src.cbegin(), src.cend(), nameOccur); }
+    { return _latext_var_present_i_(src.cbegin(), src.cend(), nameOccur); }
 
     template<typename GUM_SCALAR>
     constexpr std::vector<std::string> ASTtree<GUM_SCALAR>::_latext_var_present_(
         const Set<std::string>& src, NameCounter* nameOccur)
-    { return _latext_var_present_(src.cbegin(), src.cend(), nameOccur); }
+    { return _latext_var_present_i_(src.cbegin(), src.cend(), nameOccur); }
 
     template<typename GUM_SCALAR>
     ASTBinaryOp<GUM_SCALAR>::ASTBinaryOp(const std::string& typ, std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2)
@@ -327,8 +329,8 @@ namespace gum{
     {}
 
     template<typename GUM_SCALAR>
-    template<typename Iter> 
-    ASTsum<GUM_SCALAR>::ASTsum(Iter b_var, Iter e_var, std::unique_ptr<ASTtree<GUM_SCALAR>> term)
+    template<std::input_iterator Iter, std::sentinel_for<Iter> Sen>
+    ASTsum<GUM_SCALAR>::ASTsum(Iter b_var, Sen e_var, std::unique_ptr<ASTtree<GUM_SCALAR>> term)
         : ASTtree<GUM_SCALAR>("_sum_"), _var_(*b_var), 
         _term_(b_var+1==e_var ? std::move(term) : std::make_unique<ASTsum>(b_var+1, e_var, std::move(term)))
     {}
@@ -386,8 +388,8 @@ namespace gum{
         return "\\left(" + _to_latex_(nameOccur) + "\\right)";
     }
 
-    template<typename GUM_SCALAR, typename Iter>
-    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTreesI(Iter begin, Iter end){
+    template<typename GUM_SCALAR, std::forward_iterator Iter, std::sentinel_for<Iter> Sen>
+    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTreesI(Iter begin, Sen end){
         if(begin+1 == end) return std::move(*begin);
         return std::make_unique<ASTmult<GUM_SCALAR>>(std::move(*begin), std::move(productOfTreesI<GUM_SCALAR, Iter>(begin+1, end)));
     }

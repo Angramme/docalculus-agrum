@@ -90,7 +90,7 @@ namespace gum{
         std::string toLatex(NameCounter* nameOccur) const;
 
         /**
-         * @brief Evaluation of a AST tree from inside a BN
+         * @brief Evaluation of an AST tree from inside a BN
          * 
          * @param bn the observational Bayesian network in which will be done the computations
          * @return const Potential<GUM_SCALAR>&  the resulting Potential
@@ -160,8 +160,10 @@ namespace gum{
          * each variable (default value 0 if the variable is not a key in this dict)
          * @return constexpr std::string the presented names
          */
+        // TODO: look at this template tho
+        // template<std::input_iterator Iter, std::sentinel_for<Iter> Sen>
         template<typename Iter>
-        constexpr static std::vector<std::string> _latext_var_present_(Iter b_src, Iter e_src, NameCounter* nameOccur = nullptr); 
+        constexpr static std::vector<std::string> _latext_var_present_i_(Iter b_src, Iter e_src, NameCounter* nameOccur = nullptr); 
     };   // TODO : finish
 
 
@@ -486,11 +488,14 @@ namespace gum{
         /**
          * @brief Represents a sum over variables of an ASTtree
          * 
+         * @tparam Iter 
+         * @tparam Sen
+         * 
          * @param var name of the variables on which to sum
          * @param term the tree to be evaluated
          */
-        template<typename Iter> 
-        ASTsum(Iter b_var, Iter e_var, std::unique_ptr<ASTtree<GUM_SCALAR>> term);
+        template<std::input_iterator Iter, std::sentinel_for<Iter> Sen>
+        ASTsum(Iter b_var, Sen e_var, std::unique_ptr<ASTtree<GUM_SCALAR>> term);
 
         /**
          * @brief get the term to sum
@@ -548,13 +553,14 @@ namespace gum{
      * 
      * @tparam GUM_SCALAR 
      * @tparam Iter 
+     * @tparam Sen
      * @param begin begin iterator to the trees (as unique_ptr<ASTtree>) to multiply
      * @param end end iterator to the trees (as unique_ptr<ASTtree>) to multiply
      * @return ASTtree<GUM_SCALAR>  the ASTtree representing the tree of multiplications
      */
     // template<typename GUM_SCALAR, typename Iter>
-    template<typename GUM_SCALAR, typename Iter>
-    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTreesI(Iter begin, Iter end);
+    template<typename GUM_SCALAR, std::forward_iterator Iter, std::sentinel_for<Iter> Sen>
+    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTreesI(Iter begin, Sen end);
     
     /**
      * @brief create an ASTtree for a sequence of multiplications of ASTtree
@@ -563,7 +569,6 @@ namespace gum{
      * @param xs the trees (as unique_ptr<ASTtree>) to multiply
      * @return ASTtree<GUM_SCALAR>  the ASTtree representing the tree of multiplications
      */
-    // template<typename GUM_SCALAR, typename Iter>
     template<typename GUM_SCALAR>
     std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(std::vector<std::unique_ptr<ASTtree<GUM_SCALAR>>>& xs);
     
@@ -574,7 +579,6 @@ namespace gum{
      * @param xs the trees (as unique_ptr<ASTtree>) to multiply
      * @return ASTtree<GUM_SCALAR>  the ASTtree representing the tree of multiplications
      */
-    // template<typename GUM_SCALAR, typename Iter>
     template<typename GUM_SCALAR>
     std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(Set<std::unique_ptr<ASTtree<GUM_SCALAR>>>& xs);
 }
