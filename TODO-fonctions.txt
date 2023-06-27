@@ -1,0 +1,7 @@
+Liste des fonctions a ajouter dans SWIG directement en Python a la place de les recoder en C++.
+Principalement des fonctions de visualisation et fonctions qui utilisent la configuration de pyAgrum 
+(  pyAgrum.config["trux"]  ).
+
+La liste:
+
+- CausalModel::toDot
