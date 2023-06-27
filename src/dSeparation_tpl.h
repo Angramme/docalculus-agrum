@@ -51,7 +51,7 @@ namespace gum{
     }
 
     template<typename GUM_SCALAR>
-    bool isDSep_tech2(const BayesNet<GUM_SCALAR>& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset){
+    bool isDSep(const BayesNet<GUM_SCALAR>& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset){
         auto gu = reduce_moralize(bn, sx, sy, zset);
         remove_nodes(gu, zset);
         return !is_path_x_y(gu, sx, sy);
@@ -59,11 +59,6 @@ namespace gum{
 
     template<typename GUM_SCALAR>
     bool isDSep_parents(const BayesNet<GUM_SCALAR>& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset){
-        return _isDSep_tech2_parents(bn, sx, sy, zset);
-    }
-
-    template<typename GUM_SCALAR>
-    bool isDSep_tech2_parents(const BayesNet<GUM_SCALAR>& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset){
         auto G = UndiGraph();
         auto ancestors = sx + sy;
         const auto anc = ancestors;

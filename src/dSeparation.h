@@ -10,6 +10,7 @@
 
 namespace gum{
 
+
     /**
      * @brief Predicate on whether ``a`` is parent of ``b`` in the graph ``g``, the graph must be a DAG 
      * 
@@ -22,6 +23,8 @@ namespace gum{
      */
     template<typename GUM_SCALAR>
     bool isParent(NodeId a, NodeId b, const BayesNet<GUM_SCALAR>& bn);
+
+
 
     /**
      * @brief Returns the undirected graph obtained by reducing (ancestor graph) and moralizing the Bayesian network ``bn``
@@ -36,6 +39,8 @@ namespace gum{
     template<typename GUM_SCALAR>
     UndiGraph reduce_moralize(const BayesNet<GUM_SCALAR>& bn, const NodeSet& x, const NodeSet& y, const NodeSet& zset);
 
+
+
     /**
      * @brief Remove all nodes in zset from the graph.
      * 
@@ -43,6 +48,9 @@ namespace gum{
      * @param zset nodes to remove
      */
     void remove_nodes(UndiGraph& gg, const NodeSet& zset);
+
+
+
 
     /**
      * @brief Predicate asserting the existence of a path between 
@@ -59,6 +67,7 @@ namespace gum{
     bool is_path_x_y(const UndiGraph& gg, const NodeSet& sx, const NodeSet& sy, const NodeSet& marked = NodeSet({}));
 
 
+
     /**
      * @brief Test of d-separation for ``x`` and ``y``, given ``zset`` using the graph-moralization method
      * 
@@ -71,7 +80,9 @@ namespace gum{
      * @return false 
      */
     template<typename GUM_SCALAR>
-    bool isDSep_tech2(const BayesNet<GUM_SCALAR>& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset);
+    bool isDSep(const BayesNet<GUM_SCALAR>& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset);
+
+
 
     /**
      * @brief Test of d-separation of ``sx`` and ``sy`` given ``Z``, 
@@ -89,21 +100,6 @@ namespace gum{
     template<typename GUM_SCALAR>
     bool isDSep_parents(const BayesNet<GUM_SCALAR>& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset);
 
-    /**
-     * @brief Test of d-separation of ``sx`` and ``sy`` given ``Z``, 
-     * considering only the paths with an arc coming into ``x`` using 
-     * the graph-moralization method
-     * 
-     * @tparam GUM_SCALAR 
-     * @param bn the bayesian network
-     * @param sx source nodes
-     * @param sy destinantion nodes
-     * @param zset blocking set
-     * @return true 
-     * @return false 
-     */
-    template<typename GUM_SCALAR>
-    bool isDSep_tech2_parents(const BayesNet<GUM_SCALAR>& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset);
 
 
     /**
@@ -121,6 +117,8 @@ namespace gum{
      */
     template<typename GUM_SCALAR>
     bool isDSep_tech2_children(const BayesNet<GUM_SCALAR>& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset);
+
+
 
     /**
      * @brief Asserts whether or not ``x`` is a descendant of ``y`` in ``bn``
@@ -149,6 +147,8 @@ namespace gum{
     template<typename GUM_SCALAR>
     const NodeSet& barren_nodes(const BayesNet<GUM_SCALAR>& bn, const NodeSet& interest);
 
+
+
     /**
      * @brief Creates and returns a duplicate DAG of the given 
      * Bayesian network, excluding the nodes provided in the nexcl set.
@@ -162,8 +162,6 @@ namespace gum{
     DAG partialDAGfromBN(const BayesNet<GUM_SCALAR>& bn, const NodeSet& nexcl = {});
 
 
-    
-
     /**
      * @brief Reduce a BN by removing barren nodes w.r.t a set of nodes.
      * 
@@ -175,90 +173,6 @@ namespace gum{
     template<typename GUM_SCALAR>
     DAG dSep_reduce(const BayesNet<GUM_SCALAR>& g, const NodeSet& interest);
 
-    /**
-     * @brief Test of d-separation of ``x`` and ``y`` given ``Z``, considering 
-     * only the paths with an arc coming into ``x`` using the usual paths method 
-     * 
-     * @tparam GUM_SCALAR 
-     * @param bn 
-     * @param x 
-     * @param sy 
-     * @param zset 
-     * @param reduced 
-     * @return true 
-     * @return false 
-     */
-    template<typename GUM_SCALAR>
-    bool _isDSep_tech1_parents(const BayesNet<GUM_SCALAR>& bn, NodeId x, const NodeSet& sy, const NodeSet& zset, bool reduced = false){
-        if(!reduced && bn.nodes().size() > 170){
-            
-        }
-    }
-
-    //   if not reduced and len(bn.nodes()) > 170:
-    //     g = dSep_reduce(bn, sy | zset | {x})
-    //   else:
-    //     g = bn
-
-    //   for p in g.parents(x):
-    //     if not _blocked(g, False, p, sy, zset, {x}, {x}):
-    //       return False
-    //   return True
-
-
-    // def _isDSep_tech1_children(bn: "pyAgrum.BayesNet", x: NodeId, sy: NodeSet, setz: NodeSet, reduced=False) -> bool:
-    //   """ Test of d-separation of ``x`` and ``y`` given ``Z``, considering only the paths with an arc coming from ``x``
-    //   using the usual paths method"""
-
-    //   if not reduced and len(bn.nodes()) > 170:
-    //     g = dSep_reduce(bn, sy | setz | {x})
-    //   else:
-    //     g = bn
-
-    //   for c in g.children(x):
-    //     if not _blocked(g, True, c, sy, setz, {x}, {x}):
-    //       return False
-    //   return True
-
-
-    // def isDSep_tech1(bn: "pyAgrum.BayesNet", sx: NodeSet, sy: NodeSet, setz: NodeSet, reduced=False) -> bool:
-    //   """ Test of d-separation for ``x`` and ``y``, given ``Z`` using the usual paths method """
-
-    //   if len(sx) > len(sy):
-    //     sx, sy = sy, sx
-
-    //   if not reduced and len(bn.nodes()) > 170:
-    //     g = dSep_reduce(bn, sx | sy | setz)
-    //   else:
-    //     g = bn
-    //   for i in sx:
-    //     if not _isDSep_tech1_parents(g, i, sy, setz, True):
-    //       return False
-    //     if not _isDSep_tech1_children(g, i, sy, setz, True):
-    //       return False
-    //   return True
-
-
-    // def isDSep(bn: "pyAgrum.BayesNet", x: NodeSet, y: NodeSet, z: NodeSet) -> bool:
-    //   """
-    //   Check if x and y are d-separated by z in the BN
-
-    //   Parameters
-    //   ----------
-    //   bn: pyAgrum.BayesNet
-
-    //   x : NodeSet
-
-    //   y : NodeSet
-
-    //   z : NodeSet
-
-    //   Returns
-    //   -------
-    //   bool
-    //     whether x and y are d-separated by z
-    //   """
-    //   return isDSep_tech2(bn, x, y, z)
 }
 
 #include "dSeparation_tpl.h"
