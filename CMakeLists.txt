@@ -36,6 +36,8 @@ file(GLOB DOCALC_INCLUDE ${DOCALC_SOURCE_DIR}/src/*.h)
 
 add_executable (main ${DOCALC_SOURCE})
 target_link_libraries(main agrum)
+target_include_directories(main PUBLIC ${DOCALC_SOURCE_DIR}/src/)
+target_include_directories(main PUBLIC ${AGRUM_INSTALLATION_DIRECTORY}/include/)
 
 install (TARGETS main DESTINATION bin)
 

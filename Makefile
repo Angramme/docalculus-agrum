@@ -17,3 +17,6 @@ run::
 
 clean::
 	rm -rf ./build/*
+
+cmakeclean::
+	cmake --build ./build --target clean

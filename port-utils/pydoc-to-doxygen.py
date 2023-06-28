@@ -8,10 +8,10 @@ def clean(txt):
     return txt
 
 def trans(txt):
-    txt = txt.replace("// ", "")
+    txt = re.sub(r"//[^\S\n\t]+", "", txt)
     desc = re.compile(r'"""\n+((?:.|\n)*)\s+Parameters', re.M)
     retu = re.compile(r'Returns\s+-+((?:.|\n)*)"""', re.M)
-    para = re.compile(r'Parameters\n\s+-+((?:\n|.)+)\s+(?:Returns|""")')
+    para = re.compile(r'Parameters\n\s+-+((?:(?!Returns\s+-+)(?:\n|.))+)\s+(?:Returns\s+-+|""")', re.M)
     paral = re.compile(r'\s+(\w+)\s*:\s*(.*)')
 
     des = desc.search(txt).group(1)
@@ -47,4 +47,5 @@ if __name__ == "__main__":
     while l != "=":
         s += "\n"+l
         l = input()
+    print(trans(s))
     print(doxygen(*trans(s)))
