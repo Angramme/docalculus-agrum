@@ -9,8 +9,10 @@
 #include <agrum/tools/core/set.h>
 #include <agrum/tools/core/hashTable.h>
 #include <agrum/tools/graphicalModels/DAGmodel.h>
+#include <doorCriteria.h>
 #include <utility>
 #include <string>
+#include <optional>
 
 namespace gum{
 
@@ -32,7 +34,7 @@ namespace gum{
       * @author Kacper Ozieblowski
       */
    template <typename GUM_SCALAR>
-   class CausalModel : public DAGmodel { // TODO: overrite all the other methods of DAGmodel and it's base class etc... !!!
+   class CausalModel : public DAGmodel {
    private:
       const gum::BayesNet<GUM_SCALAR>& _ob_BN_; ///< observational bayes net
       // self.__latentVarsDescriptor = latentVarsDescriptor
@@ -47,21 +49,8 @@ namespace gum{
                bool keepArcs = false
                );
 
-      // TODO : finish the copy constructor
-
-      // CausalModel(const CausalModel& ot)
-      //    : CausalModel(gum::BayesNet<GUM_SCALAR>(ot._ob_BN_), )
-      // {}
-      //   def clone(self) -> "pyAgrum.causal.CausalModel":
-   //     """
-   //     Copy a causal model
-
-   //     :return: the copy
-   //     """
-   //     return CausalModel(pyAgrum.BayesNet(self.__observationalBN),
-   //                        self.__latentVarsDescriptor,
-   //                        self.__keepArcs)
-
+      CausalModel(const CausalModel& ot);
+    
       /**
        * @brief Add a new latent variable with a name, a pair of children and replacing (or not) correlations between children.
        * 
@@ -113,6 +102,10 @@ namespace gum{
        * @return const gum::NodeSet& 
        */
       const gum::NodeSet& children(gum::NodeId id) const;
+
+      /// returns the children of a set of nodes
+      NodeSet children(const NodeSet& ids) const;
+      NodeSet children(const std::vector< std::string >& names) const;
 
       /**
        * @brief Returns a mapping from node's id to it's corresponding name.
@@ -197,197 +190,240 @@ namespace gum{
       const gum::ArcSet& arcs() const;
 
       /**
-       * @brief TODO
-       * 
-       * @return const gum::VariableNodeMap& 
+       * @brief Returns a map between variables and nodes of this causal gum::BayesNet.
+       *
+       * @return Returns a constant reference to the gum::VariableNodeMap.
        */
       const gum::VariableNodeMap& variableNodeMap() const; 
 
       /**
-       * @brief TODO
-       * 
-       * @param x 
-       * @return const gum::DiscreteVariable& 
+       * @brief Returns a gum::DiscreteVariable given its gum::NodeId in the
+       *        causal gum::BayesNet.
+       *
+       * @param id The variable's id to return.
+       * @returns Returns a constant reference of the gum::DiscreteVariable
+       *          corresponding to id in the gum::BayesNet.
+       * @throw NotFound Raised if id does not match a a variable in the
+       *                 gum::BayesNet.
        */
       const gum::DiscreteVariable& variable(gum::NodeId x) const;
 
       /**
-       * @brief TODO
-       * 
-       * @return gum::NodeId 
+       * @brief Returns a variable's id in the causal gum::BayesNet.
+       *
+       * @param var The variable from which the gum::NodeId is returned.
+       * @return Returns the gum::DiscreteVariable gum::NodeId in the
+       *         gum::BayesNet.
+       * @throw NotFound If var is not in the gum::BayesNet.
        */
       gum::NodeId nodeId(const gum::DiscreteVariable& x) const;
 
       /**
-       * @brief TODO
-       * 
-       * @return const gum::DiscreteVariable& 
+       * @brief Returns a variable given its name in the causal gum::BayesNet.
+       *
+       * @param name The variable's name in the gum::BayesNet.
+       * @return Returns the gum::DiscreteVariable named name in the
+       * gum::BayesNet.
+       * @throw NotFound Raised if name does not match a variable in the
+       * gum::BayesNet.
        */
       const gum::DiscreteVariable& variableFromName(const std::string& name) const;
 
       /**
-       * @brief Create a dot representation of the causal model.
-       * 
-       * @return std::string 
+       * @brief Check if a backdoor exists between `cause` and `effect`
+       *
+       * @param cause int|str : the nodeId or the name of the cause
+       * @param effect int|str : the nodeId or the name of the effect
+       * @return nullopt if not found backdoor. Otherwise return the found backdoors as set of ids.
        */
-      std::string toDot();
-      // TODO: 
-      //   def toDot(self) -> str:
-   //     """
-   //     Create a dot representation of the causal model
+      std::optional<gum::NodeSet> backDoor(std::string cause, std::string effect);
 
-   //     :return: the dot representation in a string
-   //     """
-   //     res = "digraph {"
+      /**
+       * @brief Check if a backdoor exists between `cause` and `effect`
+       *
+       * @param cause int|str : the nodeId or the name of the cause
+       * @param effect int|str : the nodeId or the name of the effect
+       * @return nullopt if not found backdoor. Otherwise return the found backdoors as set of ids.
+       */
+      std::optional<gum::NodeSet> backDoor(gum::NodeId cause, gum::NodeId effect);
 
-   //     # latent variables
-   //     if pyAgrum.config['causal', 'show_latent_names'] == 'True':
-   //       shap = "ellipse"
-   //     else:
-   //       shap = "point"
-   //     res += f'''
-   //     node [fillcolor="{pyAgrum.config['causal', 'default_node_bgcolor']}",
-   //           fontcolor="{pyAgrum.config['causal', 'default_node_fgcolor']}",
-   //           style=filled,shape={shap}];
-   //       '''
-   //     res += "\n"
+      /**
+       * @brief Check if a backdoor exists between `cause` and `effect`
+       *
+       * @param cause int|str : the nodeId or the name of the cause
+       * @param effect int|str : the nodeId or the name of the effect
+       * @return nullopt if not found backdoor. Otherwise return the found backdoors as set of names.
+       */
+      std::optional<std::set<std::string>> backDoor_withNames(std::string cause, std::string effect);
 
-   //     for n in self.nodes():
-   //       if n in self.latentVariablesIds():
-   //         res += '   "' + self.names()[n] + '";' + "\n"
-   //     # not latent variables
-   //     res += f'''
-   //     node [fillcolor="{pyAgrum.config['causal', 'default_node_bgcolor']}",
-   //           fontcolor="{pyAgrum.config['causal', 'default_node_fgcolor']}",
-   //           style=filled,shape="ellipse"];
-   //       '''
-   //     res += "\n"
-
-   //     for n in self.nodes():
-   //       if n not in self.latentVariablesIds():
-   //         res += '   "' + self.names()[n] + '";' + "\n"
-
-   //     for a, b in self.arcs():
-   //       res += '   "' + self.names()[a] + '"->"' + self.names()[b] + '" '
-   //       if a in self.latentVariablesIds() or b in self.latentVariablesIds():
-   //         res += ' [style="dashed"];'
-   //       else:
-   //         black_color = pyAgrum.config['notebook', 'default_arc_color']
-   //         res += ' [color="' + black_color + ':' + black_color + '"];'
-   //       res += "\n"
-
-   //     res += "\n};"
-   //     return res
+      /**
+       * @brief Check if a backdoor exists between `cause` and `effect`
+       *
+       * @param cause int|str : the nodeId or the name of the cause
+       * @param effect int|str : the nodeId or the name of the effect
+       * @return nullopt if not found backdoor. Otherwise return the found backdoors as set of names.
+       */
+      std::optional<std::set<std::string>> backDoor_withNames(gum::NodeId cause, gum::NodeId effect);
 
 
-      // const gum::NodeSet& backDoor(gum::NodeId cause, gum::NodeId effect){
-      //    for bd in backdoor_generator(self, icause, ieffect, self.latentVariablesIds()):
-      //       return bd;
-      //    return None
-      // }
+      /**
+       * @brief Check if a frontdoor exists between `cause` and `effect`
+       *
+       * @param cause int|str : the nodeId or the name of the cause
+       * @param effect int|str : the nodeId or the name of the effect
+       * @return nullopt if not found frontdoor. Otherwise return the found frontdoors as set of ids.
+       */
+      std::optional<gum::NodeSet> frontDoor(std::string cause, std::string effect);
+
+      /**
+       * @brief Check if a frontdoor exists between `cause` and `effect`
+       *
+       * @param cause int|str : the nodeId or the name of the cause
+       * @param effect int|str : the nodeId or the name of the effect
+       * @return nullopt if not found frontdoor. Otherwise return the found frontdoors as set of ids.
+       */
+      std::optional<gum::NodeSet> frontDoor(gum::NodeId cause, gum::NodeId effect);
+
+      /**
+       * @brief Check if a frontdoor exists between `cause` and `effect`
+       *
+       * @param cause int|str : the nodeId or the name of the cause
+       * @param effect int|str : the nodeId or the name of the effect
+       * @return nullopt if not found frontdoor. Otherwise return the found frontdoors as set of names.
+       */
+      std::optional<std::set<std::string>> frontDoor_withNames(std::string cause, std::string effect);
+
+      /**
+       * @brief Check if a frontdoor exists between `cause` and `effect`
+       *
+       * @param cause int|str : the nodeId or the name of the cause
+       * @param effect int|str : the nodeId or the name of the effect
+       * @return nullopt if not found frontdoor. Otherwise return the found frontdoors as set of names.
+       */
+      std::optional<std::set<std::string>> frontDoor_withNames(gum::NodeId cause, gum::NodeId effect);
+   
+      /// @name Variable manipulation methods.
+      /// @{
+      /**
+       * Returns a constant reference to the dag of this Bayes Net.
+       */
+      const DAG& dag() const;
+
+      /**
+       * Returns the number of variables in this Directed Graphical Model.
+       */
+      virtual Size size() const final;
+
+      /**
+       * Returns the number of arcs in this Directed Graphical Model.
+       */
+      Size sizeArcs() const;
+
+      /**
+       * Return true if this node exists in this graphical model.
+       */
+      bool exists(NodeId node) const final;
+      bool exists(const std::string& name) const final;
+
+      /// returns the parents of a node and the node
+      /**
+       * @param id the node which is the head of an arc with the returned nodes
+       * @param name the name of the node the node which is the head of an arc with
+       * the returned nodes*/
+      NodeSet family(const NodeId id) const final;
+      NodeSet family(const std::string& name) const final;
+
+      /// returns the set of nodes with directed path outgoing from a given node
+      /** Note that the set of nodes returned may be empty if no path within the
+       * ArcGraphPart is outgoing from the given node.
+       * @param id the node which is the tail of a directed path with the returned
+       * nodes
+       * @param name the name of the node which is the tail of a directed path with
+       * the returned nodes */
+      NodeSet descendants(const NodeId id) const;
+      NodeSet descendants(const std::string& name) const;
+
+      /// returns the set of nodes with directed path ingoing to a given node
+      /** Note that the set of nodes returned may be empty if no path within the
+       * ArcGraphPart is ingoing to the given node.
+       * @param id the node which is the head of a directed path with the returned
+       * nodes
+       * @param name the name of the node which is the head of a directed path with
+       * the returned nodes */
+      NodeSet ancestors(const NodeId id) const;
+      NodeSet ancestors(const std::string& name) const;
+
+      /** build a UndiGraph by moralizing the Ancestral Graph of a set of Nodes
+       *
+       * @param nodes the set of nodeId
+       * @param nodenames the vector of names of nodes
+       * @return the moralized ancestral graph
+       */
+      UndiGraph moralizedAncestralGraph(const NodeSet& nodes) const;
+      UndiGraph moralizedAncestralGraph(const std::vector< std::string >& nodenames) const;
+   
+   
+      /** check if node X and node Y are independent given nodes Z
+       */
+      bool isIndependent(NodeId X, NodeId Y, const NodeSet& Z) const final;
+
+      /** check if nodes X and nodes Y are independent given nodes Z
+       */
+      bool isIndependent(const NodeSet& X, const NodeSet& Y, const NodeSet& Z) const final;
+
+      bool isIndependent(const std::string&                Xname,
+                        const std::string&                Yname,
+                        const std::vector< std::string >& Znames) const {
+         return isIndependent(idFromName(Xname), idFromName(Yname), nodeset(Znames));
+      };
+
+      bool isIndependent(const std::vector< std::string >& Xnames,
+                        const std::vector< std::string >& Ynames,
+                        const std::vector< std::string >& Znames) const {
+         return isIndependent(nodeset(Xnames), nodeset(Ynames), nodeset(Znames));
+      };
+
+      /**
+       * The node's id are coherent with the variables and nodes of the topology.
+       */
+      UndiGraph moralGraph() const;
+
+      /**
+       * The topological order stays the same as long as no variable or arcs are
+       * added or erased src the topology.
+       * @param clear If false returns the previously created topology.
+       */
+      Sequence< NodeId > topologicalOrder() const;
+
+      /// @return true if all the named node are the same and all the named arcs are
+      /// the same
+      bool hasSameStructure(const DAGmodel& other);
+
+      protected:
+      /**
+       * Private copy operator.
+       */
+      DAGmodel& operator=(const DAGmodel& source);
    };
 
-   //   def backDoor(self, cause: Union[NodeId, str], effect: Union[NodeId, str], withNames: bool = True) -> Union[
-   //     None, NameSet, NodeSet]:
-   //     """
-   //     Check if a backdoor exists between `cause` and `effect`
+   /**
+     * @brief Create an causal model induced by a subset of nodes.
+     *
+     * @param cm CausalModel : the causal model
+     * @param sns Set[int] : the set of nodes
+     * @return CausalModel the induced sub-causal model
+     */
+   template<typename GUM_SCALAR>
+   CausalModel<GUM_SCALAR> inducedCausalSubModel(const CausalModel<GUM_SCALAR>& cm, const NodeSet& sns); 
 
-   //     Parameters
-   //     ----------
-   //     cause: int|str
-   //       the nodeId or the name of the cause
-   //     effect: int|str
-   //       the nodeId or the name of the effect
-   //     withNames: bool
-   //       wether we use ids (int) or names (str)
-
-   //     Returns
-   //     -------
-   //     None|Set[str]|Set[int]
-   //       None if no found backdoor. Otherwise return the found backdoors as set of ids or set of names.
-   //     """
-   //     icause = self.__observationalBN.idFromName(cause) if isinstance(cause, str) else cause
-   //     ieffect = self.__observationalBN.idFromName(effect) if isinstance(effect, str) else effect
-
-   //     for bd in backdoor_generator(self, icause, ieffect, self.latentVariablesIds()):
-   //       if withNames:
-   //         return {self.__observationalBN.variable(i).name() for i in bd}
-
-   //       return bd
-
-   //     return None
-
-   //   def frontDoor(self, cause: Union[NodeId, str], effect: Union[NodeId, str], withNames: bool = True) -> Union[
-   //     None, NameSet, NodeSet]:
-   //     """
-   //     Check if a frontdoor exists between cause and effet
-
-   //     Parameters
-   //     ----------
-   //     cause: int|str
-   //       the nodeId or the name of the cause
-   //     effect: int|str
-   //       the nodeId or the name of the effect
-   //     withNames: bool
-   //       wether we use ids (int) or names (str)
-
-   //     Returns
-   //     -------
-   //     None|Set[str]|Set[int]
-   //       None if no found frontdoot. Otherwise return the found frontdoors as set of ids or set of names.
-   //     """
-   //     icause = self.__observationalBN.idFromName(cause) if isinstance(cause, str) else cause
-   //     ieffect = self.__observationalBN.idFromName(effect) if isinstance(effect, str) else effect
-
-   //     for fd in frontdoor_generator(self, icause, ieffect, self.latentVariablesIds()):
-   //       if withNames:
-   //         return {self.__observationalBN.variable(i).name() for i in fd}
-
-   //       return fd
-
-   //     return None
-
-
-   // def inducedCausalSubModel(cm: CausalModel, sns: NodeSet = None) -> CausalModel:
-   //   """
-   //   Create an causal model induced by a subset of nodes.
-
-   //   Parameters
-   //   ----------
-   //   cm: CausalModel
-   //     the causal model
-   //   sns: Set[int]
-   //     the set of nodes
-
-   //   Returns
-   //   -------
-   //   CausalModel
-   //     the induced sub-causal model
-   //   """
-   //   if sns is None:
-   //     sns = cm.nodes()
-   //   nodes = sns - cm.latentVariablesIds()
-
-   //   bn = pyAgrum.BayesNet()
-
-   //   for n in nodes:
-   //     bn.add(cm.observationalBN().variable(n), n)
-
-   //   for x, y in cm.arcs():
-   //     if y in nodes:
-   //       if x in nodes:
-   //         bn.addArc(x, y)
-
-   //   names = cm.names()
-   //   latentVarsDescriptor = []
-   //   lats = cm.latentVariablesIds()
-   //   for latentVar in lats:
-   //     inters = cm.children(latentVar) & nodes
-   //     if len(inters) > 0:
-   //       latentVarsDescriptor.append((names[latentVar],
-   //                                    list(inters)))
-
-   //   return CausalModel(bn, latentVarsDescriptor, True)
+   /**
+     * @brief Create an causal model induced by a subset of nodes.
+     *
+     * @param cm CausalModel : the causal model
+     * @return CausalModel the induced sub-causal model
+     */
+   template<typename GUM_SCALAR>
+   CausalModel<GUM_SCALAR> inducedCausalSubModel(const CausalModel<GUM_SCALAR>& cm);
 }
 
 #include "CausalModel_tpl.h"

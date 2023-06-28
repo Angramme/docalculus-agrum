@@ -32,18 +32,10 @@ namespace gum{
          addLatentVariable(p.first, p.second, keepArcs);
    }
 
-      // CausalModel(const CausalModel& ot)
-      //    : CausalModel(gum::BayesNet<GUM_SCALAR>(ot._ob_BN_), )
-      // {}
-      //   def clone(self) -> "pyAgrum.causal.CausalModel":
-   //     """
-   //     Copy a causal model
-
-   //     :return: the copy
-   //     """
-   //     return CausalModel(pyAgrum.BayesNet(self.__observationalBN),
-   //                        self.__latentVarsDescriptor,
-   //                        self.__keepArcs)
+   template <typename GUM_SCALAR>
+   CausalModel<GUM_SCALAR>::CausalModel(const CausalModel& ot)
+      : _ob_BN_(ot._ob_BN_), _keepArcs_(ot._keepArcs_), _ca_BN_(ot._ca_BN_), _lat_(ot._lat_), _names_(ot._names_)
+   {}
 
    template <typename GUM_SCALAR>
    void CausalModel<GUM_SCALAR>::addLatentVariable(const std::string& name, const std::vector<std::string>& lchild, bool keepArcs){
@@ -103,6 +95,15 @@ namespace gum{
    }
 
    template <typename GUM_SCALAR>
+   NodeSet CausalModel<GUM_SCALAR>::children(const NodeSet& ids) const{
+      return _ca_BN_.children(ids);
+   }
+   template <typename GUM_SCALAR>
+   NodeSet CausalModel<GUM_SCALAR>::children(const std::vector< std::string >& names) const{
+      return _ca_BN_.children(names);
+   }
+
+   template <typename GUM_SCALAR>
    const decltype(CausalModel<GUM_SCALAR>::_names_)& CausalModel<GUM_SCALAR>::names() const {
       return _names_;
    }
@@ -159,7 +160,7 @@ namespace gum{
 
    template<typename GUM_SCALAR>
    const gum::VariableNodeMap& CausalModel<GUM_SCALAR>::variableNodeMap() const {
-      return _ca_BN_.variableNodeMap(); // TODO: implement this !
+      return _ca_BN_.variableNodeMap();
    }
 
    template<typename GUM_SCALAR>
@@ -177,169 +178,212 @@ namespace gum{
       return _ca_BN_.variableFromName(name);
    }
 
+   template<typename GUM_SCALAR>
+   std::optional<gum::NodeSet> CausalModel<GUM_SCALAR>::backDoor(std::string cause, std::string effect){
+      return backDoor(idFromName(cause), idFromName(effect));
+   }
 
    template<typename GUM_SCALAR>
-   std::string CausalModel<GUM_SCALAR>::toDot(){
-      std::string res = "digraph {";
-      
-      // latent variables
-      // TODO: finish
-
-      return res;
+   std::optional<gum::NodeSet> CausalModel<GUM_SCALAR>::backDoor(gum::NodeId cause, gum::NodeId effect){
+      for(auto bd : backdoor_generator(*this, cause, effect, latentVariablesIds())){
+         return bd;
+      }
+      return std::nullopt;
    }
-      //   def toDot(self) -> str:
-   //     """
-   //     Create a dot representation of the causal model
 
-   //     :return: the dot representation in a string
-   //     """
-   //     res = "digraph {"
+   template<typename GUM_SCALAR>
+   std::optional<std::set<std::string>> CausalModel<GUM_SCALAR>::backDoor_withNames(std::string cause, std::string effect){
+      return backDoor_withNames(idFromName(cause), idFromName(effect));
+   }
 
-   //     # latent variables
-   //     if pyAgrum.config['causal', 'show_latent_names'] == 'True':
-   //       shap = "ellipse"
-   //     else:
-   //       shap = "point"
-   //     res += f'''
-   //     node [fillcolor="{pyAgrum.config['causal', 'default_node_bgcolor']}",
-   //           fontcolor="{pyAgrum.config['causal', 'default_node_fgcolor']}",
-   //           style=filled,shape={shap}];
-   //       '''
-   //     res += "\n"
-
-   //     for n in self.nodes():
-   //       if n in self.latentVariablesIds():
-   //         res += '   "' + self.names()[n] + '";' + "\n"
-   //     # not latent variables
-   //     res += f'''
-   //     node [fillcolor="{pyAgrum.config['causal', 'default_node_bgcolor']}",
-   //           fontcolor="{pyAgrum.config['causal', 'default_node_fgcolor']}",
-   //           style=filled,shape="ellipse"];
-   //       '''
-   //     res += "\n"
-
-   //     for n in self.nodes():
-   //       if n not in self.latentVariablesIds():
-   //         res += '   "' + self.names()[n] + '";' + "\n"
-
-   //     for a, b in self.arcs():
-   //       res += '   "' + self.names()[a] + '"->"' + self.names()[b] + '" '
-   //       if a in self.latentVariablesIds() or b in self.latentVariablesIds():
-   //         res += ' [style="dashed"];'
-   //       else:
-   //         black_color = pyAgrum.config['notebook', 'default_arc_color']
-   //         res += ' [color="' + black_color + ':' + black_color + '"];'
-   //       res += "\n"
-
-   //     res += "\n};"
-   //     return res
+   template<typename GUM_SCALAR>
+   std::optional<std::set<std::string>> CausalModel<GUM_SCALAR>::backDoor_withNames(gum::NodeId cause, gum::NodeId effect){
+      for(auto bd : backdoor_generator(*this, cause, effect, latentVariablesIds())){
+         auto st = std::set<std::string>();
+         for(auto i : bd){
+            st.insert(observationalBN().variable(i).name());
+         }
+         return st;
+      }
+      return std::nullopt;
+   }
 
 
-      // const gum::NodeSet& backDoor(gum::NodeId cause, gum::NodeId effect){
-      //    for bd in backdoor_generator(self, icause, ieffect, self.latentVariablesIds()):
-      //       return bd;
-      //    return None
-      // }
+   template<typename GUM_SCALAR>
+   std::optional<gum::NodeSet> CausalModel<GUM_SCALAR>::frontDoor(std::string cause, std::string effect){
+      return frontDoor(idFromName(cause), idFromName(effect));
+   }
 
-   //   def backDoor(self, cause: Union[NodeId, str], effect: Union[NodeId, str], withNames: bool = True) -> Union[
-   //     None, NameSet, NodeSet]:
-   //     """
-   //     Check if a backdoor exists between `cause` and `effect`
+   template<typename GUM_SCALAR>
+   std::optional<gum::NodeSet> CausalModel<GUM_SCALAR>::frontDoor(gum::NodeId cause, gum::NodeId effect){
+      for(auto bd : frontdoor_generator(*this, cause, effect, latentVariablesIds())){
+         return bd;
+      }
+      return std::nullopt;
+   }
 
-   //     Parameters
-   //     ----------
-   //     cause: int|str
-   //       the nodeId or the name of the cause
-   //     effect: int|str
-   //       the nodeId or the name of the effect
-   //     withNames: bool
-   //       wether we use ids (int) or names (str)
+   template<typename GUM_SCALAR>
+   std::optional<std::set<std::string>> CausalModel<GUM_SCALAR>::frontDoor_withNames(std::string cause, std::string effect){
+      return frontDoor_withNames(idFromName(cause), idFromName(effect));
+   }
 
-   //     Returns
-   //     -------
-   //     None|Set[str]|Set[int]
-   //       None if no found backdoor. Otherwise return the found backdoors as set of ids or set of names.
-   //     """
-   //     icause = self.__observationalBN.idFromName(cause) if isinstance(cause, str) else cause
-   //     ieffect = self.__observationalBN.idFromName(effect) if isinstance(effect, str) else effect
-
-   //     for bd in backdoor_generator(self, icause, ieffect, self.latentVariablesIds()):
-   //       if withNames:
-   //         return {self.__observationalBN.variable(i).name() for i in bd}
-
-   //       return bd
-
-   //     return None
-
-   //   def frontDoor(self, cause: Union[NodeId, str], effect: Union[NodeId, str], withNames: bool = True) -> Union[
-   //     None, NameSet, NodeSet]:
-   //     """
-   //     Check if a frontdoor exists between cause and effet
-
-   //     Parameters
-   //     ----------
-   //     cause: int|str
-   //       the nodeId or the name of the cause
-   //     effect: int|str
-   //       the nodeId or the name of the effect
-   //     withNames: bool
-   //       wether we use ids (int) or names (str)
-
-   //     Returns
-   //     -------
-   //     None|Set[str]|Set[int]
-   //       None if no found frontdoot. Otherwise return the found frontdoors as set of ids or set of names.
-   //     """
-   //     icause = self.__observationalBN.idFromName(cause) if isinstance(cause, str) else cause
-   //     ieffect = self.__observationalBN.idFromName(effect) if isinstance(effect, str) else effect
-
-   //     for fd in frontdoor_generator(self, icause, ieffect, self.latentVariablesIds()):
-   //       if withNames:
-   //         return {self.__observationalBN.variable(i).name() for i in fd}
-
-   //       return fd
-
-   //     return None
+   template<typename GUM_SCALAR>
+   std::optional<std::set<std::string>> CausalModel<GUM_SCALAR>::frontDoor_withNames(gum::NodeId cause, gum::NodeId effect){
+      for(auto bd : frontdoor_generator(*this, cause, effect, latentVariablesIds())){
+         auto st = std::set<std::string>();
+         for(auto i : bd){
+            st.insert(observationalBN().variable(i).name());
+         }
+         return st;
+      }
+      return std::nullopt;
+   }
 
 
-   // def inducedCausalSubModel(cm: CausalModel, sns: NodeSet = None) -> CausalModel:
-   //   """
-   //   Create an causal model induced by a subset of nodes.
+   template <typename GUM_SCALAR>
+   const DAG& CausalModel<GUM_SCALAR>::dag() const{
+      return _ca_BN_.dag();
+   }
 
-   //   Parameters
-   //   ----------
-   //   cm: CausalModel
-   //     the causal model
-   //   sns: Set[int]
-   //     the set of nodes
+   
+   template <typename GUM_SCALAR>
+   Size CausalModel<GUM_SCALAR>::size() const{
+      return _ca_BN_.size();
+   }
 
-   //   Returns
-   //   -------
-   //   CausalModel
-   //     the induced sub-causal model
-   //   """
-   //   if sns is None:
-   //     sns = cm.nodes()
-   //   nodes = sns - cm.latentVariablesIds()
+   
+   template <typename GUM_SCALAR>
+   Size CausalModel<GUM_SCALAR>::sizeArcs() const{
+      return _ca_BN_.sizeArcs();
+   }
 
-   //   bn = pyAgrum.BayesNet()
+   
+   template <typename GUM_SCALAR>
+   bool CausalModel<GUM_SCALAR>::exists(NodeId node) const{
+      return _ca_BN_.exists(node);
+   }
 
-   //   for n in nodes:
-   //     bn.add(cm.observationalBN().variable(n), n)
+   
+   template <typename GUM_SCALAR>
+   bool CausalModel<GUM_SCALAR>::exists(const std::string& name) const{
+      return _ca_BN_.exists(name);
+   }
 
-   //   for x, y in cm.arcs():
-   //     if y in nodes:
-   //       if x in nodes:
-   //         bn.addArc(x, y)
+   
+   template <typename GUM_SCALAR>
+   NodeSet CausalModel<GUM_SCALAR>::family(const NodeId id) const{
+      return _ca_BN_.family(id);
+   }
 
-   //   names = cm.names()
-   //   latentVarsDescriptor = []
-   //   lats = cm.latentVariablesIds()
-   //   for latentVar in lats:
-   //     inters = cm.children(latentVar) & nodes
-   //     if len(inters) > 0:
-   //       latentVarsDescriptor.append((names[latentVar],
-   //                                    list(inters)))
+   
+   template <typename GUM_SCALAR>
+   NodeSet CausalModel<GUM_SCALAR>::family(const std::string& name) const{
+      return _ca_BN_.family(name);
+   }
 
-   //   return CausalModel(bn, latentVarsDescriptor, True)
+   
+   template <typename GUM_SCALAR>
+   NodeSet CausalModel<GUM_SCALAR>::descendants(const NodeId id) const{
+      return _ca_BN_.descendants(id);
+   }
+
+   
+   template <typename GUM_SCALAR>
+   NodeSet CausalModel<GUM_SCALAR>::descendants(const std::string& name) const{
+      return _ca_BN_.descendants(name);
+   }
+
+   
+   template <typename GUM_SCALAR>
+   NodeSet CausalModel<GUM_SCALAR>::ancestors(const NodeId id) const{
+      return _ca_BN_.ancestors(id);
+   }
+
+   
+   template <typename GUM_SCALAR>
+   NodeSet CausalModel<GUM_SCALAR>::ancestors(const std::string& name) const{
+      return _ca_BN_.ancestors(name);
+   }
+
+   
+   template <typename GUM_SCALAR>
+   UndiGraph CausalModel<GUM_SCALAR>::moralizedAncestralGraph(const NodeSet& nodes) const{
+      return _ca_BN_.moralizedAncestralGraph(nodes);
+   }
+
+   
+   template <typename GUM_SCALAR>
+   UndiGraph CausalModel<GUM_SCALAR>::moralizedAncestralGraph(const std::vector< std::string >& nodenames) const{
+      return _ca_BN_.moralizedAncestralGraph(nodenames);
+   }
+
+   
+   template <typename GUM_SCALAR>
+   bool CausalModel<GUM_SCALAR>::isIndependent(NodeId X, NodeId Y, const NodeSet& Z) const{
+      return _ca_BN_.isIndependent(X, Y, Z);
+   }
+
+   
+   template <typename GUM_SCALAR>
+   bool CausalModel<GUM_SCALAR>::isIndependent(const NodeSet& X, const NodeSet& Y, const NodeSet& Z) const{
+      return _ca_BN_.isIndependent(X, Y, Z);
+   }
+
+   
+   template <typename GUM_SCALAR>
+   UndiGraph CausalModel<GUM_SCALAR>::moralGraph() const{
+      return _ca_BN_.moralGraph();
+   }
+
+   
+   template <typename GUM_SCALAR>
+   Sequence< NodeId > CausalModel<GUM_SCALAR>::topologicalOrder() const{
+      return _ca_BN_.topologicalOrder();
+   }
+
+   
+   template <typename GUM_SCALAR>
+   bool CausalModel<GUM_SCALAR>::hasSameStructure(const DAGmodel& other){
+      return _ca_BN_.hasSameStructure(other);
+   }
+
+   
+   template <typename GUM_SCALAR>
+   DAGmodel& CausalModel<GUM_SCALAR>::operator=(const DAGmodel& source){
+      return _ca_BN_.operator=(source);
+   }
+
+   
+
+
+   template<typename GUM_SCALAR>
+   CausalModel<GUM_SCALAR> inducedCausalSubModel(const CausalModel<GUM_SCALAR>& cm){
+      return inducedCausalSubModel(cm, cm.nodes());
+   }
+
+   template<typename GUM_SCALAR>
+   CausalModel<GUM_SCALAR> inducedCausalSubModel(const CausalModel<GUM_SCALAR>& cm, const NodeSet& sns){
+      const auto& nodes = sns - cm.latentVariablesIds();
+      auto bn = BayesNet<GUM_SCALAR>();
+
+      for(auto n : nodes){
+         bn.add(cm.observationalBN().variable(n), n);
+      }
+      for(auto arc : cm.arcs()){
+         if(nodes.contains(arc.tail) && nodes.contains(arc.head)){
+            bn.addArc(arc.head, arc.tail);
+         }
+      }
+
+      auto latentVarsDescriptor = std::vector<std::pair<std::string, std::vector<gum::NodeId>>>();
+      const auto& names = cm.names();
+      for(auto latentVar : cm.latentVariablesIds()){
+         auto inters = cm.children(latentVar) * nodes;
+         if(inters.size() > 0){
+            std::vector<gum::NodeId> inters_vec(inters.begin(), inters.end());
+            latentVarsDescriptor.push_back(std::make_pair(names[latentVar], inters_vec));
+         } 
+      }
+      return CausalModel<GUM_SCALAR>(bn, latentVarsDescriptor, true);
+   }
 }
