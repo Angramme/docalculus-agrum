@@ -4,11 +4,15 @@
 
 #include <string>
 #include <memory>
+#include <iterator>
 
 #include <agrum/tools/core/set.h>
 #include <agrum/tools/core/hashTable.h>
 #include <agrum/tools/multidim/potential.h>
 #include <agrum/BN/BayesNet.h>
+
+
+// TODO: remove all print and affichage functions and add them to the TODO-fonctions.txt
 
 namespace gum{
 
@@ -43,17 +47,6 @@ namespace gum{
          * @param verbose if True, add some messages
          */
         ASTtree(const std::string& typ);
-
-        //   def copy(self) -> "ASTtree":
-        //     """
-        //     Copy an CausalFormula tree
-
-        //     Returns
-        //     -------
-        //     ASTtree
-        //       the new causal tree
-        //     """
-        //     raise NotImplementedError
 
         /**
          * @brief Set the Verbosity of messages.
@@ -160,11 +153,9 @@ namespace gum{
          * each variable (default value 0 if the variable is not a key in this dict)
          * @return constexpr std::string the presented names
          */
-        // TODO: look at this template tho
-        // template<std::input_iterator Iter, std::sentinel_for<Iter> Sen>
         template<typename Iter>
-        constexpr static std::vector<std::string> _latext_var_present_i_(Iter b_src, Iter e_src, NameCounter* nameOccur = nullptr); 
-    };   // TODO : finish
+        constexpr static std::vector<std::string> _latext_var_present_(Iter b_src, Iter e_src, NameCounter* nameOccur = nullptr); 
+    };   // TODO : finish?
 
 
     /**
@@ -528,6 +519,7 @@ namespace gum{
 //   def copy(self) -> "ASTtree":
 //     return ASTsum(self.var, self.term.copy())
 
+    // TODO: look here 
     // /**
     //  * @brief create an ASTtree for a sequence of multiplications of ASTtree
     //  * 
@@ -596,7 +588,7 @@ std::ostream& operator<< ( std::ostream& outs, const gum::ASTtree<GUM_SCALAR>& p
 
 #include "doAST_tpl.h"
 #ifndef GUM_NO_INLINE
-#  include "doAST_inl.h"
+#include "doAST_inl.h"
 #endif
 
 #endif 

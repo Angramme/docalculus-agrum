@@ -46,7 +46,7 @@ namespace gum{
     template<typename GUM_SCALAR> 
     // template<std::input_iterator Iter, std::sentinel_for<Iter> Sen>
     template<typename Iter>
-    constexpr std::vector<std::string> ASTtree<GUM_SCALAR>::_latext_var_present_i_(
+    constexpr std::vector<std::string> ASTtree<GUM_SCALAR>::_latext_var_present_(
         Iter b_src, Iter e_src, NameCounter* nameOccur)
     {
         auto vs = std::vector<std::string>(std::distance(b_src, e_src));
@@ -58,12 +58,12 @@ namespace gum{
     template<typename GUM_SCALAR>
     constexpr std::vector<std::string> ASTtree<GUM_SCALAR>::_latext_var_present_(
         const std::vector<std::string>& src, NameCounter* nameOccur)
-    { return _latext_var_present_i_(src.cbegin(), src.cend(), nameOccur); }
+    { return _latext_var_present_(src.cbegin(), src.cend(), nameOccur); }
 
     template<typename GUM_SCALAR>
     constexpr std::vector<std::string> ASTtree<GUM_SCALAR>::_latext_var_present_(
         const Set<std::string>& src, NameCounter* nameOccur)
-    { return _latext_var_present_i_(src.cbegin(), src.cend(), nameOccur); }
+    { return _latext_var_present_(src.cbegin(), src.cend(), nameOccur); }
 
     template<typename GUM_SCALAR>
     ASTBinaryOp<GUM_SCALAR>::ASTBinaryOp(const std::string& typ, std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2)
@@ -271,7 +271,7 @@ namespace gum{
         : ASTtree<GUM_SCALAR>("_joint_"), _varnames_(varNames) 
     {}
 
-    template<typename GUM_SCALAR>
+    template<typename GUM_SCALAR> // TODO: this function crashes...
     Potential<GUM_SCALAR> ASTJointProba<GUM_SCALAR>::eval(const BayesNet<GUM_SCALAR>& bn) const {
         using namespace std;
         if(this->getVerbosity()) cout << "EVAL $" << _to_latex_() << "$ in context" << endl;

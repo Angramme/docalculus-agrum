@@ -133,7 +133,7 @@ namespace gum{
         auto possible = G->nodes() - (bn.descendants(cause, {}) + interest + not_bd);
         if(possible.size() == 0) return backdoor_iterator::end;
 
-        return backdoor_iterator(G, possible);
+        return backdoor_iterator(G, possible, cause, effect);
     }
 
     //   backdoors = set()
@@ -151,7 +151,7 @@ namespace gum{
 
 
 
-
+    // TODO
     // def frontdoor_generator(bn: "pyAgrum.BayesNet", x: NodeId, y: NodeId, not_fd: NodeSet = None):
     //   """
     //   Generates frontdoor sets for the pair of nodes `(x, y)` in the graph `bn` excluding the nodes in the set

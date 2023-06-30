@@ -3,6 +3,7 @@
 #include <agrum/BN/BayesNet.h>
 
 #include "CausalModel.h"
+#include "CausalFormula.h"
 #include "doorCriteria.h"
 #include "dSeparation.h"
 #include "doCalculus.h"

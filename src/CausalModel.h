@@ -373,15 +373,11 @@ namespace gum{
 
       bool isIndependent(const std::string&                Xname,
                         const std::string&                Yname,
-                        const std::vector< std::string >& Znames) const {
-         return isIndependent(idFromName(Xname), idFromName(Yname), nodeset(Znames));
-      };
+                        const std::vector< std::string >& Znames) const ;
 
       bool isIndependent(const std::vector< std::string >& Xnames,
                         const std::vector< std::string >& Ynames,
-                        const std::vector< std::string >& Znames) const {
-         return isIndependent(nodeset(Xnames), nodeset(Ynames), nodeset(Znames));
-      };
+                        const std::vector< std::string >& Znames) const;
 
       /**
        * The node's id are coherent with the variables and nodes of the topology.
@@ -427,4 +423,8 @@ namespace gum{
 }
 
 #include "CausalModel_tpl.h"
+#ifndef GUM_NO_INLINE
+#include "CausalModel_inl.h"
+#endif
+
 #endif 

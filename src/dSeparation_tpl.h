@@ -7,13 +7,13 @@
 
 namespace gum{
 
-    template<typename GUM_SCALAR>
-    bool isParent(NodeId a, NodeId b, const BayesNet<GUM_SCALAR>& bn){
+    template<typename GraphT>
+    bool isParent(NodeId a, NodeId b, const GraphT& bn){
         return bn.existsArc(a, b);
     }
 
-    template<typename GUM_SCALAR>
-    UndiGraph reduce_moralize(const BayesNet<GUM_SCALAR>& bn, const NodeSet& x, const NodeSet& y, const NodeSet& zset){
+    template<typename GraphT>
+    UndiGraph reduce_moralize(const GraphT& bn, const NodeSet& x, const NodeSet& y, const NodeSet& zset){
         auto G = UndiGraph();
 
         auto ancetre = x + y;
@@ -50,15 +50,15 @@ namespace gum{
         return G;
     }
 
-    template<typename GUM_SCALAR>
-    bool isDSep(const BayesNet<GUM_SCALAR>& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset){
+    template<typename GraphT>
+    bool isDSep(const GraphT& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset){
         auto gu = reduce_moralize(bn, sx, sy, zset);
         remove_nodes(gu, zset);
         return !is_path_x_y(gu, sx, sy);
     }
 
-    template<typename GUM_SCALAR>
-    bool isDSep_parents(const BayesNet<GUM_SCALAR>& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset){
+    template<typename GraphT>
+    bool isDSep_parents(const GraphT& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset){
         auto G = UndiGraph();
         auto ancestors = sx + sy;
         const auto anc = ancestors;
@@ -90,12 +90,12 @@ namespace gum{
         }
         remove_nodes(G, zset);
 
-        return !is_path_x_y(bn, sx, sy);
+        return !is_path_x_y(G, sx, sy);
     }
 
 
-    template<typename GUM_SCALAR>
-    bool isDSep_tech2_children(const BayesNet<GUM_SCALAR>& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset){
+    template<typename GraphT>
+    bool isDSep_tech2_children(const GraphT& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset){
         auto G = UndiGraph();
         auto ancestors = sx + sy;
         for(const auto& i : sy){
@@ -129,8 +129,8 @@ namespace gum{
     }
 
 
-    template<typename GUM_SCALAR>
-    bool is_descendant(const BayesNet<GUM_SCALAR>& bn, NodeId x, NodeId y, const NodeSet& marked){
+    template<typename GraphT>
+    bool is_descendant(const GraphT& bn, NodeId x, NodeId y, const NodeSet& marked){
         if(isParent(y, x, bn)) return true;
         
         for(const auto& c : bn.children(y)){
@@ -141,8 +141,8 @@ namespace gum{
         return false;
     }
 
-    template<typename GUM_SCALAR>
-    void _BN_inner_rec(NodeSet& s, NodeId a, const BayesNet<GUM_SCALAR>& bn, const NodeSet& interest){
+    template<typename GraphT>
+    void _BN_inner_rec(NodeSet& s, NodeId a, const GraphT& bn, const NodeSet& interest){
         if((interest + s).contains(a)) return;
         s.insert(a);
         for(const auto& b : bn.parents(a)){
@@ -151,8 +151,8 @@ namespace gum{
         }
     }
 
-    template<typename GUM_SCALAR>
-    const NodeSet& barren_nodes(const BayesNet<GUM_SCALAR>& bn, const NodeSet& interest){
+    template<typename GraphT>
+    const NodeSet& barren_nodes(const GraphT& bn, const NodeSet& interest){
         auto s = NodeSet();
         
         for(const auto& x : bn.nodes()){
@@ -163,8 +163,8 @@ namespace gum{
     }
 
 
-    template<typename GUM_SCALAR>
-    DAG partialDAGfromBN(const BayesNet<GUM_SCALAR>& bn, const NodeSet& nexcl){
+    template<typename GraphT>
+    DAG partialDAGfromBN(const GraphT& bn, const NodeSet& nexcl){
         auto d = DAG();
 
         auto nodes = bn.nodes() - nexcl;
@@ -183,8 +183,8 @@ namespace gum{
 
     NodeSet _filaires(const DAG& bn, const NodeSet& interest, bool inf);
 
-    template<typename GUM_SCALAR>
-    DAG dSep_reduce(const BayesNet<GUM_SCALAR>& g, const NodeSet& interest){
+    template<typename GraphT>
+    DAG dSep_reduce(const GraphT& g, const NodeSet& interest){
         const auto barren = barren_nodes(g, interest);
         auto reduced_g = partialDAGfromBN(g, barren);
         for(const auto& f : _filaires(reduced_g, interest, false))
@@ -196,7 +196,7 @@ namespace gum{
     /**
      * @brief internal method to check if a path is blocked
      * 
-     * @tparam GUM_SCALAR 
+     * @tparam GraphT 
      * @param bn 
      * @param pht 
      * @param x 
@@ -207,8 +207,8 @@ namespace gum{
      * @return true 
      * @return false 
      */
-    template<typename GUM_SCALAR>
-    bool _blocked(const BayesNet<GUM_SCALAR>& bn, bool pht, const NodeSet& x, const NodeSet& y, const NodeSet& setz, NodeSet& marquage0, NodeSet& marquage1){
+    template<typename GraphT>
+    bool _blocked(const GraphT& bn, bool pht, const NodeSet& x, const NodeSet& y, const NodeSet& setz, NodeSet& marquage0, NodeSet& marquage1){
         if(y.contains(x)) return false;
         bool isInxZ = setz.contains(x);
         bool wasIn = marquage0.isSupersetOrEqual(x) || marquage1.isSupersetOrEqual(x);

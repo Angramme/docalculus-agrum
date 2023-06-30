@@ -14,30 +14,30 @@ namespace gum{
     /**
      * @brief Predicate on whether ``a`` is parent of ``b`` in the graph ``g``, the graph must be a DAG 
      * 
-     * @tparam GUM_SCALAR 
+     * @tparam GraphT structure implementing a DAG-like interface
      * @param a 
      * @param b 
      * @param bn 
      * @return true 
      * @return false 
      */
-    template<typename GUM_SCALAR>
-    bool isParent(NodeId a, NodeId b, const BayesNet<GUM_SCALAR>& bn);
+    template<typename GraphT>
+    bool isParent(NodeId a, NodeId b, const GraphT& bn);
 
 
 
     /**
      * @brief Returns the undirected graph obtained by reducing (ancestor graph) and moralizing the Bayesian network ``bn``
      * 
-     * @tparam GUM_SCALAR 
+     * @tparam GraphT structure implementing a DAG-like interface
      * @param bn the BayesNet
      * @param x NodeSet generating the ancestor graph
      * @param y Second NodeSet generating the ancestor graph
      * @param zset Third NodeSet generating the ancestor graph
      * @return UndiGraph The reduced moralized graph
      */
-    template<typename GUM_SCALAR>
-    UndiGraph reduce_moralize(const BayesNet<GUM_SCALAR>& bn, const NodeSet& x, const NodeSet& y, const NodeSet& zset);
+    template<typename GraphT>
+    UndiGraph reduce_moralize(const GraphT& bn, const NodeSet& x, const NodeSet& y, const NodeSet& zset);
 
 
 
@@ -71,7 +71,7 @@ namespace gum{
     /**
      * @brief Test of d-separation for ``x`` and ``y``, given ``zset`` using the graph-moralization method
      * 
-     * @tparam GUM_SCALAR 
+     * @tparam GraphT structure implementing a DAG-like interface
      * @param bn the bayesian network
      * @param sx source nodes
      * @param sy destinantion nodes
@@ -79,8 +79,8 @@ namespace gum{
      * @return true if ``Z`` d-separates ``x`` and ``y``
      * @return false 
      */
-    template<typename GUM_SCALAR>
-    bool isDSep(const BayesNet<GUM_SCALAR>& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset);
+    template<typename GraphT>
+    bool isDSep(const GraphT& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset);
 
 
 
@@ -89,7 +89,7 @@ namespace gum{
      * considering only the paths with an arc coming into ``x`` using 
      * the graph-moralization method
      * 
-     * @tparam GUM_SCALAR 
+     * @tparam GraphT structure implementing a DAG-like interface
      * @param bn the bayesian network
      * @param sx source nodes
      * @param sy destinantion nodes
@@ -97,8 +97,8 @@ namespace gum{
      * @return true if ``Z`` d-separates ``x`` and ``y``
      * @return false 
      */
-    template<typename GUM_SCALAR>
-    bool isDSep_parents(const BayesNet<GUM_SCALAR>& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset);
+    template<typename GraphT>
+    bool isDSep_parents(const GraphT& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset);
 
 
 
@@ -107,7 +107,7 @@ namespace gum{
      * considering only the paths with an arc coming from ``x`` using 
      * the graph-moralization method
      * 
-     * @tparam GUM_SCALAR 
+     * @tparam GraphT structure implementing a DAG-like interface
      * @param bn the bayesian network
      * @param sx source nodes
      * @param sy destinantion nodes
@@ -115,15 +115,15 @@ namespace gum{
      * @return true 
      * @return false 
      */
-    template<typename GUM_SCALAR>
-    bool isDSep_tech2_children(const BayesNet<GUM_SCALAR>& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset);
+    template<typename GraphT>
+    bool isDSep_tech2_children(const GraphT& bn, const NodeSet& sx, const NodeSet& sy, const NodeSet& zset);
 
 
 
     /**
      * @brief Asserts whether or not ``x`` is a descendant of ``y`` in ``bn``
      * 
-     * @tparam GUM_SCALAR 
+     * @tparam GraphT structure implementing a DAG-like interface
      * @param bn 
      * @param x 
      * @param y 
@@ -131,21 +131,21 @@ namespace gum{
      * @return true 
      * @return false 
      */
-    template<typename GUM_SCALAR>
-    bool is_descendant(const BayesNet<GUM_SCALAR>& bn, NodeId x, NodeId y, const NodeSet& marked);
+    template<typename GraphT>
+    bool is_descendant(const GraphT& bn, NodeId x, NodeId y, const NodeSet& marked);
 
     /**
      * @brief Returns the set of recursively determined barren nodes in 
      * ``bn`` relatively to the set of nodes ``interest`` (if ``interest`` 
      * is void, then the whole set of nodes in the graph will be returned)
      * 
-     * @tparam GUM_SCALAR 
+     * @tparam GraphT structure implementing a DAG-like interface
      * @param bn 
      * @param interest 
      * @return const NodeSet& 
      */
-    template<typename GUM_SCALAR>
-    const NodeSet& barren_nodes(const BayesNet<GUM_SCALAR>& bn, const NodeSet& interest);
+    template<typename GraphT>
+    const NodeSet& barren_nodes(const GraphT& bn, const NodeSet& interest);
 
 
 
@@ -153,25 +153,25 @@ namespace gum{
      * @brief Creates and returns a duplicate DAG of the given 
      * Bayesian network, excluding the nodes provided in the nexcl set.
      * 
-     * @tparam GUM_SCALAR 
+     * @tparam GraphT structure implementing a DAG-like interface
      * @param bn 
      * @param nexcl 
      * @return DAG 
      */
-    template<typename GUM_SCALAR>
-    DAG partialDAGfromBN(const BayesNet<GUM_SCALAR>& bn, const NodeSet& nexcl = {});
+    template<typename GraphT>
+    DAG partialDAGfromBN(const GraphT& bn, const NodeSet& nexcl = {});
 
 
     /**
      * @brief Reduce a BN by removing barren nodes w.r.t a set of nodes.
      * 
-     * @tparam GUM_SCALAR 
+     * @tparam GraphT structure implementing a DAG-like interface
      * @param g the source
      * @param interest the nodes of interest
      * @return DAG the reduced DAG
      */
-    template<typename GUM_SCALAR>
-    DAG dSep_reduce(const BayesNet<GUM_SCALAR>& g, const NodeSet& interest);
+    template<typename GraphT>
+    DAG dSep_reduce(const GraphT& g, const NodeSet& interest);
 
 }
 
