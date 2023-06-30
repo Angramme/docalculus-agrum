@@ -2,224 +2,87 @@
 #ifndef CAUSAL_FORMULA_H
 #define CAUSAL_FORMULA_H
 
+#include <string>
+#include <set>
+
+#include <agrum/tools/core/hashTable.h>
+#include <agrum/tools/multidim/potential.h>
 
 #include "CausalModel.h"
+#include "doAST.h"
 
 namespace gum{
 
     /**
-     * @brief Represents a causal query in a causal model. The query 
-     * is encoded as an CausalFormula that can be evaluated in the 
-     * causal model : $P(on|knowing, \\overhook (doing))$
-     * 
+     * @brief Represents a causal query in a causal model. 
+     * The query is encoded as a CausalFormula that can 
+     * be evaluated in the causal model :
+     *  $P(on|knowing, \\overhook (doing))$
+     *
+     * @param cm CausalModel : the causal model
+     * @param root ASTtree : the syntax tree
+     * @param on str|Set[str] : the variable or the set of variables of interest
+     * @param doing str|Set[str] : the intervention variable(s)
+     * @param knowing None|str|Set[str] : the observation variable(s)
      */
+    template<typename GUM_SCALAR>
     class CausalFormula{
+    private:
+        CausalModel<GUM_SCALAR> _cm_;
+        ASTtree<GUM_SCALAR> _root_;
+        std::set<std::string> _on_;
+        std::set<std::string> _doing_;
+        std::set<std::string> _knowing_;
 
     public:
-        CausalFormula(const CausalModel& cm, )
-    }
+        /**
+         * @brief Represents a causal query in a causal model. 
+         * The query is encoded as an CausalFormula that can 
+         * be evaluated in the causal model :
+         *  $P(on|knowing, \\overhook (doing))$
+         *
+         * @param cm CausalModel : the causal model
+         * @param root ASTtree : the syntax tree
+         * @param on str|Set[str] : the variable or the set of variables of interest
+         * @param doing str|Set[str] : the intervention variable(s)
+         * @param knowing None|str|Set[str] : the observation variable(s)
+         */
+        CausalFormula(
+            const CausalModel<GUM_SCALAR>& cm, 
+            const ASTtree<GUM_SCALAR>& root, 
+            const std::set<std::string>& on, 
+            const std::set<std::string>& doing, 
+            const std::set<std::string>& knowing);
 
-    // TODO: finish this 
+        /**
+         * @brief Prints the object
+         *
+         * @param pre  : a prefix for each line of the string representation
+         * @return str the string version of the CausalFormula
+         */
+        std::string _print_(const std::string& pre) const;
 
-//   Parameters
-//   ----------
-//   cm : CausalModel
-//     the causal model
-//   root : ASTtree
-//     the syntax tree
-//   on : str|Set[str]
-//     the variable or the set of variables of interest
-//   doing : str|Set[str]
-//     the intervention variable(s)
-//   knowing: None|str|Set[str]
-//     the observation variable(s)
-//   """
+         /**
+         * @brief Returns a string representing the query compiled by this Formula. If values, the query is annotated with the values in the dictionary.        
+         *
+         * @param values None|Dict[str,str] : the values to add in the query representation
+         * @return str the LaTeX representation of the causal query for this CausalFormula
+         */
+        std::string latexQuery(const HashTable<std::string, std::string>& values) const;
 
-//   def __init__(self, cm: "pyAgrum.causal.CausalModel", root: ASTtree, on: Union[str, NameSet],
-//                doing: Union[str, NameSet],
-//                knowing: Optional[NameSet] = None):
-//     """
-//     Parameters
-//     ----------
-//     cm : CausalModel
-//       the causal model
-//     root : ASTtree
-//       the syntax tree
-//     on : str|Set[str]
-//       the variable or the set of variables of interest
-//     doing : str|Set[str]
-//       the intervention variable(s)
-//     knowing: None|str|Set[str]
-//       the observation variable(s)
-//     """
-//     self._cm = cm
-//     self._root = root
-//     if isinstance(on, str):
-//       self._on = {on}
-//     else:
-//       self._on = on
-//     if isinstance(doing, str):
-//       self._doing = {doing}
-//     else:
-//       self._doing = doing
-//     if knowing is None:
-//       self._knowing = set()
-//     else:
-//       self._knowing = knowing
+        const CausalModel<GUM_SCALAR>& cm() const; 
+        const ASTtree<GUM_SCALAR>& root() const;
 
-//   def __str__(self, prefix: str = "") -> str:
-//     """
-
-//     Parameters
-//     ----------
-//     prefix :
-//       a prefix for each line of the string representation
-
-//     Returns
-//     -------
-//     str
-//       the string version of the CausalFormula
-//     """
-//     return self.root.__str__(prefix)
-
-//   def latexQuery(self, values: Optional[Dict[str, str]] = None) -> str:
-//     """
-//     Returns a string representing the query compiled by this Formula. If values, the query is annotated with the
-//     values in the dictionary.
-
-//     Parameters
-//     ----------
-//     values : None|Dict[str,str]
-//       the values to add in the query representation
-
-//     Returns
-//     -------
-//     str
-//       the LaTeX representation of the causal query for this CausalFormula
-//     """
-//     if values is None:
-//       values = {}
-
-//     def _getVarRepresentation(v: str) -> str:
-//       if v not in values:
-//         return v
-
-//       bn = self.cm.observationalBN()
-//       label = bn.variable(self.cm.idFromName(v)).label(
-//         _getLabelIdx(bn, v, values[v]))
-//       return v + "=" + label
-
-//     # adding values when necessary
-//     on = [_getVarRepresentation(k) for k in self._on]
-//     doing = [_getVarRepresentation(k) for k in self._doing]
-//     knowing = [_getVarRepresentation(k) for k in self._knowing]
-
-//     latexOn = ",".join(on)
-
-//     doOpPref = pyAgrum.config["causal", "latex_do_prefix"]
-//     doOpSuff = pyAgrum.config["causal", "latex_do_suffix"]
-//     latexDo = ""
-//     if len(doing) > 0:
-//       latexDo = ",".join([doOpPref + d + doOpSuff for d in doing])
-
-//     latexKnw = ""
-//     if len(knowing) > 0:
-//       if latexDo != "":
-//         latexKnw = ", "
-//       latexKnw += ",".join(knowing)
-
-//     return "P( " + latexOn + " \\mid " + latexDo + latexKnw + ")"
-
-//   def toLatex(self) -> str:
-//     """
-
-//     Returns
-//     -------
-//     str
-//       a LaTeX representation of the CausalFormula
-//     """
-//     occur = defaultdict(int)
-//     for n in self._cm.observationalBN().nodes():
-//       occur[self._cm.observationalBN().variable(n).name()] = 0
-//     for n in self._doing:
-//       occur[n] = 1
-//     for n in self._knowing:
-//       occur[n] = 1
-//     for n in self._on:
-//       occur[n] = 1
-
-//     return self.latexQuery() + " = " + self._root.toLatex(occur)
-
-//   def copy(self) -> "CausalFormula":
-//     """
-//     Copy theAST. Note that the causal model is just referenced. The tree is copied.
-
-//     Returns
-//     -------
-//     CausalFormula
-//       the copu
-//     """
-//     return CausalFormula(self.cm, self.root.copy(), self._on, self._doing, self._knowing)
-
-//   @property
-//   def cm(self) -> "pyAgrum.causal.CausalModel":
-//     """
-
-//     Returns
-//     -------
-//     CausalModel
-//       the causal model
-//     """
-//     return self._cm
-
-//   @property
-//   def root(self) -> ASTtree:
-//     """
-
-//     Returns
-//     -------
-//     ASTtree
-//       the causalFormula as an ASTtree
-//     """
-//     return self._root
-
-//   def eval(self) -> "pyAgrum.Potential":
-//     """
-//     Compute the Potential from the CausalFormula over vars using cond as value for others variables
-
-//     Returns
-//     -------
-//     pyAgrum.Potential
-//       The resulting distribution
-//     """
-//     return self.root.eval(self.cm.observationalBN())
-
-
-// def _getLabelIdx(bn: "pyAgrum.BayesNet", varname: str, val: Union[int, str]) -> int:
-//   """
-//   Find the index of a label in a discrete variable from a BN.
-
-//   If val is an int, we keep is as is. If it is a str, we try to find the correct index in the variable
-
-//   Parameters
-//   ----------
-//   bn: pyAgrum.BayesNet
-//     the BN where to find the variable
-//   varname : str
-//      the name of the variable
-//   val : int|str
-//      the index or the name of the label
-
-//   Returns
-//   -------
-//   int
-//     the index of the label
-//   """
-//   if not isinstance(val, str):
-//     return val
-
-//   return bn.variableFromName(varname).index(val)
-
+        /**
+         * @brief Compute the Potential from the CausalFormula over vars using cond as value for others variables
+         *
+        * @return Potential The resulting distribution
+        */
+        Potential<GUM_SCALAR> eval() const;
+    };
 }
+
+
+#include "CausalFormula_tpl.h"
 
 #endif
