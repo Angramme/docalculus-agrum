@@ -5,3 +5,12 @@ Principalement des fonctions de visualisation et fonctions qui utilisent la conf
 La liste:
 
 - CausalModel::toDot
+- CausalFormula::latexQuery  
+- _getLabelIdx dans CausalFormula.py    (car non exporté et utilisé uniquement dans les fonctions de print)
+- CausalFormula::toLatex
+
+
+
+
+other TODO stuff:
+remember to replace all vectors in parameter by generic iterators
