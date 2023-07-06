@@ -163,8 +163,20 @@ namespace gum{
 
         reference operator*() const;
         pointer operator->() const;
+        
+        /**
+         * @brief x++ operator for backdoor_iterator
+         * 
+         * @return backdoor_iterator& 
+         */
         backdoor_iterator& operator++();
-        backdoor_iterator operator++(int);
+
+        /**
+         * @brief WARNING, performs a complete copy of this structure! Potentially slow, always prefer ++x operator!!! 
+         * 
+         * @return backdoor_iterator 
+         */
+        backdoor_iterator operator++(int);  // TODO: optimize this
         
         backdoor_iterator(backdoor_iterator&& v) = default;
         backdoor_iterator(backdoor_iterator& v) = default;
@@ -194,6 +206,9 @@ namespace gum{
     template<typename GUM_SCALAR>
     backdoor_iterator backdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_bd = {});
 
+
+    // TODO: add frontdoor generator and iterator, make a base class and derive
+    // replace the error-prone logic with the use of cppitertools/combinations iterator
 };
 
 #include "doorCriteria_tpl.h"
