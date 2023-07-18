@@ -12,28 +12,26 @@
 #include <agrum/BN/BayesNet.h>
 
 
-// TODO: remove all print and affichage functions and add them to the TODO-fonctions.txt
-
 namespace gum{
 
     typedef Set<std::string> NameSet;
     typedef HashTable<std::string, size_t> NameCounter;
-    
-    // template<typename GUM_SCALAR>
-    // class ASTBinaryOp;
 
+    // I know, I know, a bit ugly, but this was by far the most elegant solution compared to CRTP clone semantics 
+    // or even copy-pasting the whole function by hand everywhere
+    #define ___ASTtree_clone_function_injector_MACRO___ \
+        virtual std::unique_ptr<ASTtree<GUM_SCALAR>> clone() const override { \
+            return std::unique_ptr<ASTtree<GUM_SCALAR>>(new std::remove_const_t<std::remove_reference_t<decltype(*this)>>(*this)); \
+        }
+    
     /**
      * @brief Represents a generic node for the CausalFormula. The type of the node will be registered in a string.
      * 
      */
     template<typename GUM_SCALAR>
     class ASTtree{
-        // friend std::ostream& operator<< ( std::ostream& outs, const ASTtree<GUM_SCALAR>& p );
-        // template<typename>
-        // friend class ASTBinaryOp<GUM_SCALAR>;
-
     private:
-        std::string _type_;
+        std::string _type_; // TODO: relpace this with a virtual override function... maybe?
     protected:
         static bool _verbose_;
         static std::string _continueNextLine_;
@@ -101,6 +99,13 @@ namespace gum{
          */
         virtual std::string _to_latex_(NameCounter* nameOccur = nullptr) const = 0;
 
+        /**
+         * @brief Performs a deep clone of the structure
+         * 
+         * @return std::unique_ptr<Base> 
+         */
+        virtual std::unique_ptr<ASTtree<GUM_SCALAR>> clone() const = 0;
+
     protected:
         /**
          * @brief internal conversion to latex, resistant to internal precedcedence 
@@ -155,7 +160,7 @@ namespace gum{
          */
         template<typename Iter>
         constexpr static std::vector<std::string> _latext_var_present_(Iter b_src, Iter e_src, NameCounter* nameOccur = nullptr); 
-    };   // TODO : finish?
+    };  
 
 
     /**
@@ -178,6 +183,10 @@ namespace gum{
          * @param verbose if True, add some messages
          */
         ASTBinaryOp(const std::string& typ, std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2);
+
+        ASTBinaryOp(const ASTBinaryOp<GUM_SCALAR>& other)
+            : ASTtree<GUM_SCALAR>(static_cast<const ASTtree<GUM_SCALAR>&>(other)), _op1_(std::move(other._op1_->clone())), _op2_(std::move(other._op2_->clone()))
+        {}
 
         /**
          * @brief get left operand
@@ -233,14 +242,13 @@ namespace gum{
          */
         virtual Potential<GUM_SCALAR> eval(const BayesNet<GUM_SCALAR>& bn) const override;
 
+        ___ASTtree_clone_function_injector_MACRO___
+
     protected:
         virtual std::string _to_latex_(NameCounter* nameOccur = nullptr) const override;
         virtual std::string _to_latex_indep_(NameCounter* nameOccur = nullptr) const override;
     };
 
-    // TODO
-    //   def copy(self) -> "ASTtree":
-    //     return ASTplus(self.op1.copy(), self.op2.copy())
 
     /**
      * @brief Represents the substraction of 2 ASTtree instances
@@ -266,13 +274,12 @@ namespace gum{
          */
         virtual Potential<GUM_SCALAR> eval(const BayesNet<GUM_SCALAR>& bn) const override;
 
+        ___ASTtree_clone_function_injector_MACRO___
+
     protected:
         virtual std::string _to_latex_(NameCounter* nameOccur = nullptr) const override;
         virtual std::string _to_latex_indep_(NameCounter* nameOccur = nullptr) const override;
     };
-
-    //   def copy(self) -> "ASTtree":
-    //     return ASTminus(self.op1.copy(), self.op2.copy())
 
 
     /**
@@ -281,6 +288,7 @@ namespace gum{
      * @tparam GUM_SCALAR 
      */
     template<typename GUM_SCALAR>
+    // class ASTmult : public ClonableCRTP<ASTmult<GUM_SCALAR>, ASTBinaryOp<GUM_SCALAR>> {
     class ASTmult : public ASTBinaryOp<GUM_SCALAR> {
     public: 
         /**
@@ -299,13 +307,12 @@ namespace gum{
          */
         virtual Potential<GUM_SCALAR> eval(const BayesNet<GUM_SCALAR>& bn) const override;
 
+        ___ASTtree_clone_function_injector_MACRO___
+
     protected:
         virtual std::string _to_latex_(NameCounter* nameOccur = nullptr) const override;
         virtual std::string _to_latex_indep_(NameCounter* nameOccur = nullptr) const override;
     };
-
-    //   def copy(self) -> "ASTtree":
-    //     return ASTmult(self.op1.copy(), self.op2.copy())
 
     /**
      * @brief Represents the division of 2 ASTtree instances 
@@ -331,13 +338,12 @@ namespace gum{
          */
         virtual Potential<GUM_SCALAR> eval(const BayesNet<GUM_SCALAR>& bn) const override;
 
+        ___ASTtree_clone_function_injector_MACRO___
+
     protected:
         virtual std::string _to_latex_(NameCounter* nameOccur = nullptr) const override;
         virtual std::string _to_latex_indep_(NameCounter* nameOccur = nullptr) const override;
     };
-
-    //   def copy(self) -> "ASTtree":
-    //     return ASTdiv(self.op1.copy(), self.copy(self.op2.copy()))
 
 
     /**
@@ -391,14 +397,13 @@ namespace gum{
          */
         virtual Potential<GUM_SCALAR> eval(const BayesNet<GUM_SCALAR>& bn) const override;
 
+        ___ASTtree_clone_function_injector_MACRO___
+
         virtual void _print_(std::ostream& outs, int indent) const;
     protected:
         virtual std::string _to_latex_(NameCounter* nameOccur = nullptr) const override;
         virtual std::string _to_latex_indep_(NameCounter* nameOccur = nullptr) const override;
     };
-
-//   def copy(self) -> "ASTtree":
-//     return ASTposteriorProba(self.bn, self.vars, self.knw)
 
     /**
      * @brief Represents a joint probability in the base observational part of the CausalModel
@@ -433,14 +438,14 @@ namespace gum{
          */
         virtual Potential<GUM_SCALAR> eval(const BayesNet<GUM_SCALAR>& bn) const override;
 
+        ___ASTtree_clone_function_injector_MACRO___
+
         virtual void _print_(std::ostream& outs, int indent) const override;
     protected:
         virtual std::string _to_latex_(NameCounter* nameOccur = nullptr) const override;
         virtual std::string _to_latex_indep_(NameCounter* nameOccur = nullptr) const override;    
     };
 
-//   def copy(self) -> "ASTtree":
-//     return ASTjointProba(self.varNames)
 
     /**
      * @brief Represents a sum over a variable of a :class:`causal.ASTtree`.
@@ -452,6 +457,11 @@ namespace gum{
         const std::string _var_;
         const std::unique_ptr<ASTtree<GUM_SCALAR>> _term_;
     public:
+
+        ASTsum(const ASTsum<GUM_SCALAR>& other)
+            : ASTtree<GUM_SCALAR>(static_cast<const ASTtree<GUM_SCALAR>&>(other)), _var_(other._var_), _term_(std::move(other._term_->clone()))
+        {}
+    
         /**
          * @brief Represents a sum over a variable of an ASTtree
          * 
@@ -510,49 +520,41 @@ namespace gum{
          */
         virtual Potential<GUM_SCALAR> eval(const BayesNet<GUM_SCALAR>& bn) const override;
 
+        ___ASTtree_clone_function_injector_MACRO___
+
         virtual void _print_(std::ostream& outs, int indent) const override;
     protected: 
         virtual std::string _to_latex_(NameCounter* nameOccur = nullptr) const override;
         virtual std::string _to_latex_indep_(NameCounter* nameOccur = nullptr) const override;    
     };
 
-//   def copy(self) -> "ASTtree":
-//     return ASTsum(self.var, self.term.copy())
+    // no longer needed
+    #undef ___ASTtree_clone_function_injector_MACRO___
 
-    // TODO: look here 
-    // /**
-    //  * @brief create an ASTtree for a sequence of multiplications of ASTtree
-    //  * 
-    //  * @tparam GUM_SCALAR 
-    //  * @param xs the trees (as unique_ptr<ASTtree>) to multiply
-    //  * @return ASTtree<GUM_SCALAR>  the ASTtree representing the tree of multiplications
-    //  */
-    // template<typename GUM_SCALAR>
-    // ASTtree<GUM_SCALAR> productOfTrees(std::vector<std::unique_ptr<gum::ASTtree<double>, std::default_delete<gum::ASTtree<double>>>, std::allocator<std::unique_ptr<gum::ASTtree<double>, std::default_delete<gum::ASTtree<double>>>>>& xs);
-    
-    // /**
-    //  * @brief create an ASTtree for a sequence of multiplications of ASTtree
-    //  * 
-    //  * @tparam GUM_SCALAR 
-    //  * @param xs the trees (as unique_ptr<ASTtree>) to multiply
-    //  * @return ASTtree<GUM_SCALAR>  the ASTtree representing the tree of multiplications
-    //  */
-    // template<typename GUM_SCALAR>
-    // ASTtree<GUM_SCALAR> productOfTrees(std::initializer_list<std::unique_ptr<ASTtree<GUM_SCALAR>>> xs);
 
     /**
      * @brief create an ASTtree for a sequence of multiplications of ASTtree
      * 
      * @tparam GUM_SCALAR 
-     * @tparam Iter 
-     * @tparam Sen
-     * @param begin begin iterator to the trees (as unique_ptr<ASTtree>) to multiply
-     * @param end end iterator to the trees (as unique_ptr<ASTtree>) to multiply
+     * @tparam Iter iterator of item type std::unique_ptr<gum::ASTtree<GUM_SCALAR>>
+     * @param begin of the trees (as unique_ptr<ASTtree>) to multiply
+     * @param end of the trees (as unique_ptr<ASTtree>) to multiply
      * @return ASTtree<GUM_SCALAR>  the ASTtree representing the tree of multiplications
      */
-    // template<typename GUM_SCALAR, typename Iter>
     template<typename GUM_SCALAR, std::forward_iterator Iter, std::sentinel_for<Iter> Sen>
+        // requires std::same_as<std::iter_value_t<Iter>, std::unique_ptr<ASTtree<GUM_SCALAR>>>
     std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTreesI(Iter begin, Sen end);
+
+    /**
+     * @brief create an ASTtree for a sequence of multiplications of ASTtree
+     * 
+     * @tparam GUM_SCALAR 
+     * @tparam Iterable iterable implementing begin() and end() of item type std::unique_ptr<gum::ASTtree<GUM_SCALAR>>
+     * @param xs the trees (as unique_ptr<ASTtree>) to multiply
+     * @return ASTtree<GUM_SCALAR>  the ASTtree representing the tree of multiplications
+     */
+    template<typename GUM_SCALAR, typename Iterable>
+    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(Iterable& v);
     
     /**
      * @brief create an ASTtree for a sequence of multiplications of ASTtree
@@ -562,10 +564,24 @@ namespace gum{
      * @return ASTtree<GUM_SCALAR>  the ASTtree representing the tree of multiplications
      */
     template<typename GUM_SCALAR>
+    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(std::initializer_list<std::unique_ptr<ASTtree<GUM_SCALAR>>> xs);
+    
+    /**
+     * @brief create an ASTtree for a sequence of multiplications of ASTtree.
+     * Variant created purely so that user does not have to specify template parameters in 
+     * the most common use cases (i.e vector and Set)
+     * 
+     * @tparam GUM_SCALAR 
+     * @param xs the trees (as unique_ptr<ASTtree>) to multiply
+     * @return ASTtree<GUM_SCALAR>  the ASTtree representing the tree of multiplications
+     */
+    template<typename GUM_SCALAR>
     std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(std::vector<std::unique_ptr<ASTtree<GUM_SCALAR>>>& xs);
     
     /**
-     * @brief create an ASTtree for a sequence of multiplications of ASTtree
+     * @brief create an ASTtree for a sequence of multiplications of ASTtree.
+     * Variant created purely so that user does not have to specify template parameters in 
+     * the most common use cases (i.e vector and Set)
      * 
      * @tparam GUM_SCALAR 
      * @param xs the trees (as unique_ptr<ASTtree>) to multiply

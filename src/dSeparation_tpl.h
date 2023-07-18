@@ -233,4 +233,33 @@ namespace gum{
 
         return true;
     }
+
+    template<typename DirectedModel>
+    void ancestor(NodeId x, DirectedModel& dm, NodeSet& anc){
+        for(const auto& parent : dm.parents(x)){
+            if(!anc.contains(parent)){
+                anc.insert(parent);
+                ancestor(parent, dm, anc);
+            }
+        }
+    }
+
+    template<typename GUM_SCALAR>
+    NodeSet _descendants_rec(const BayesNet<GUM_SCALAR>& bn, NodeId x, NodeSet& marked, NodeSet& ensdesc) {
+        ensdesc = ensdesc + bn.children(x);
+
+        for(const auto& c : bn.children(x)){
+            if(marked.contains(c)) continue;
+            marked.insert(c);
+            ensdesc = ensdesc + _descendants_rec(bn, c, marked);
+        }
+        return ensdesc;
+    }
+
+    template<typename GUM_SCALAR>
+    NodeSet descendants(const BayesNet<GUM_SCALAR>& bn, NodeId x, const NodeSet& marked, const NodeSet& ensdesc) {
+        NodeSet m = marked;
+        NodeSet e = ensdesc;
+        return _descendants_rec(bn, x, m, e);
+    }
 }

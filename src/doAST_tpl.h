@@ -324,9 +324,14 @@ namespace gum{
 
     template<typename GUM_SCALAR>
     ASTsum<GUM_SCALAR>::ASTsum(std::initializer_list<std::string> var, std::unique_ptr<ASTtree<GUM_SCALAR>> term)
-        // : ASTtree<GUM_SCALAR>("_sum_")
         : ASTsum(var.begin(), var.end(), std::move(term))
     {}
+
+    template<typename GUM_SCALAR>
+    ASTsum<GUM_SCALAR>::ASTsum(const std::vector<std::string>& var, std::unique_ptr<ASTtree<GUM_SCALAR>> term)
+        : ASTsum(var.begin(), var.end(), std::move(term))    
+    {}
+
 
     template<typename GUM_SCALAR>
     template<std::input_iterator Iter, std::sentinel_for<Iter> Sen>
@@ -388,29 +393,42 @@ namespace gum{
         return "\\left(" + _to_latex_(nameOccur) + "\\right)";
     }
 
+
     template<typename GUM_SCALAR, std::forward_iterator Iter, std::sentinel_for<Iter> Sen>
+    INLINE
     std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTreesI(Iter begin, Sen end){
-        if(begin+1 == end) return std::move(*begin);
-        return std::make_unique<ASTmult<GUM_SCALAR>>(std::move(*begin), std::move(productOfTreesI<GUM_SCALAR, Iter>(begin+1, end)));
+        auto x = std::move(*begin);
+        ++begin;
+        if(begin == end) return std::move(x);
+        return std::make_unique<ASTmult<GUM_SCALAR>>(std::move(x), std::move(productOfTreesI<GUM_SCALAR, Iter, Sen>(begin, end)));
     }
 
-    // INLINE templates
+    template<typename GUM_SCALAR, typename Iterable>
+    INLINE
+    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(Iterable& xs){
+        auto ret = productOfTreesI<GUM_SCALAR, decltype(xs.begin()), decltype(xs.end())>(xs.begin(), xs.end());
+        return std::move(ret);
+    }
+
+    template<typename GUM_SCALAR>
+    INLINE
+    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(std::initializer_list<std::unique_ptr<ASTtree<GUM_SCALAR>>> xs){
+        auto ret = productOfTreesI<GUM_SCALAR, std::unique_ptr<ASTtree<GUM_SCALAR>>*>(xs.begin(), xs.end());
+        return std::move(ret);
+    }
 
     template<typename GUM_SCALAR>
     INLINE
     std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(std::vector<std::unique_ptr<ASTtree<GUM_SCALAR>>>& xs){
-        auto ret = productOfTreesI<GUM_SCALAR, decltype(xs.begin())>(xs.begin(), xs.end());
-        xs.clear();
-        return std::move(ret);
+        return productOfTrees<GUM_SCALAR, decltype(xs)>(xs);
     }
 
     template<typename GUM_SCALAR>
     INLINE
     std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(Set<std::unique_ptr<ASTtree<GUM_SCALAR>>>& xs){
-        auto ret = productOfTreesI<GUM_SCALAR, decltype(xs.begin())>(xs.begin(), xs.end());
-        xs.clear();
-        return std::move(ret);
+        return productOfTrees<GUM_SCALAR, decltype(xs)>(xs);
     }
+
 
     template<typename GUM_SCALAR>
     INLINE

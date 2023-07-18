@@ -56,7 +56,10 @@ int main(void) {
       std::shared_ptr<NameSet>(new Set<std::string>({"pp1", "pp2"}))));
   xs.emplace_back(std::make_unique<ASTJointProba<double>>(
       std::shared_ptr<NameSet>(new Set<std::string>({"pp3", "pp4"}))));
+  // auto ret = productOfTreesI<double>(xs.begin(), xs.end());
   auto ret = productOfTrees(xs);
+
+  // auto ii = backdoor_generator(obs1, 0, 1);
 
   return 0;
 }

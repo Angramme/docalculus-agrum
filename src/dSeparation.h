@@ -173,6 +173,30 @@ namespace gum{
     template<typename GraphT>
     DAG dSep_reduce(const GraphT& g, const NodeSet& interest);
 
+
+    /**
+     * @brief Adds the ancestors of ``x`` in the Directed Model ``dm`` to the set ``anc``
+     * 
+     * @tparam DirectedModel : BayesNet or DAG or CausalModel
+     * @param x 
+     * @param dm 
+     * @param anc 
+     */
+    template<typename DirectedModel>
+    void ancestor(NodeId x, DirectedModel& dm, NodeSet& anc);
+
+    /**
+     * @brief Returns a set composed by all the descendents of ``x`` in ``bn``
+     * 
+     * @tparam GUM_SCALAR 
+     * @param bn 
+     * @param x 
+     * @param marked 
+     * @param ensdesc 
+     * @return NodeSet 
+     */
+    template<typename GUM_SCALAR>
+    NodeSet descendants(const BayesNet<GUM_SCALAR>& bn, NodeId x, const NodeSet& marked = NodeSet({}), const NodeSet& ensdesc = NodeSet({}));
 }
 
 #include "dSeparation_tpl.h"

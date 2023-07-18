@@ -3,6 +3,7 @@
 #include <string>
 
 #include "doorCriteria.h"
+#include "dSeparation.h"
 
 namespace gum{
     template<typename GUM_SCALAR>
@@ -108,10 +109,10 @@ namespace gum{
         return std::move(r);
     }
 
-    template<typename GUM_SCALAR>
-    backdoor_iterator backdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_bd){
-        if(bn.parents(cause).size() == 0) return backdoor_iterator::end;
-        if(bn.isParent(effect, cause)) return backdoor_iterator::end;
+    template<typename GUM_SCALAR> // TODO: giga tester ca
+    backdoor_iterable backdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_bd){
+        if(bn.parents(cause).size() == 0) return backdoor_iterable(); // empty
+        if(isParent(effect, cause, bn)) return backdoor_iterable(); // empty
 
         // simplify the graph
         auto interest = NodeSet({cause, effect});
@@ -121,7 +122,7 @@ namespace gum{
             // removing the non connected in G without descendants
             // GG is a trash graph just to find the disjointed nodes in G
             auto GG = DiGraph(*G);
-            for(const auto& i : bn.descendants(cause, {})) GG.eraseNode(i);
+            for(const auto& i : descendants(bn, cause)) GG.eraseNode(i);
 
             // we only keep interesting connex components
             for(const auto& nodes : GG.connectedComponents().values()){
@@ -131,79 +132,105 @@ namespace gum{
         }
 
         auto possible = G->nodes() - (bn.descendants(cause, {}) + interest + not_bd);
-        if(possible.size() == 0) return backdoor_iterator::end;
+        if(possible.size() == 0) return backdoor_iterable();
 
-        return backdoor_iterator(G, possible, cause, effect);
+        return backdoor_iterable(backdoor_iterator(G, possible, cause, effect), backdoor_iterator());
     }
 
-    //   backdoors = set()
+    template<typename GUM_SCALAR> // TODO: giga tester ca
+    frontdoor_iterable<GUM_SCALAR> frontdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_fd){
+        if(isParent(cause, effect, bn)) return frontdoor_iterable(); // empty
+        auto possible = nodes_on_dipath(bn, cause, effect);
+        bool nodiPath = false;
+        if(possible){
+            nodiPath = true;
+            possible = std::make_unique<NodeSet>();
+            for(const auto& i : bn.nodes()) 
+                if(i != cause && i != effect) possible->insert(i);
+        }
+        *possible -= backdoor_reach(bn, cause);
+        *possible -= not_fd;
+        auto impossible = NodeSet();
+        auto g = dSep_reduce(bn, Set({cause, effect}) + *possible);
+        for(const auto& z : *possible){
+            if(!backdoor_path(g, Set({z}), Set({effect}), Set({cause}))) continue;
+            impossible.insert(z);
+        }
+        *possible -= impossible;
 
-    //   for i in range(len(possible)):
-    //     for subset in it.combinations(possible, i + 1):
-    //       sub = frozenset(subset)
-    //       worth_testing = True
-    //       for s in backdoors:
-    //         if s <= sub:
-    //           worth_testing = False
-    //       if worth_testing and isDSep_parents(G, {cause}, {effect}, sub):
-    //         backdoors.add(sub)
-    //         yield list(subset)
+        return frontdoor_iterable(frontdoor_iterator(bn, *possible, cause, effect, nodiPath), frontdoor_iterator());
+    }
 
 
+    template<typename GUM_SCALAR>
+    frontdoor_iterator<GUM_SCALAR>& frontdoor_iterator<GUM_SCALAR>::operator++() {
+        if(_next_()) return *this;
+        _is_the_end_ = true;
+        return *this;
+    }
 
-    // TODO
-    // def frontdoor_generator(bn: "pyAgrum.BayesNet", x: NodeId, y: NodeId, not_fd: NodeSet = None):
-    //   """
-    //   Generates frontdoor sets for the pair of nodes `(x, y)` in the graph `bn` excluding the nodes in the set
-    //   `not_fd` (optional)
+    template<typename GUM_SCALAR>
+    frontdoor_iterator<GUM_SCALAR> frontdoor_iterator<GUM_SCALAR>::operator++(int) {
+        frontdoor_iterator tmp = *this; ++(*this); 
+        return tmp;
+    }
 
-    //   Parameters
-    //   ----------
-    //   bn: pyAgrum.BayesNet
-    //   x: int
-    //   y: int
-    //   not_fd: Set[int] default=None
+    template<typename GUM_SCALAR>
+    frontdoor_iterator<GUM_SCALAR>& frontdoor_iterator<GUM_SCALAR>::operator=(frontdoor_iterator<GUM_SCALAR>&& o) {
+        _is_the_end_ = o._is_the_end_;
+        _is_front_door_ = o._is_front_door_;
+        _G_ = o._G_;
+        _possible_ = o._possible_;
+        _cause_ = o._cause_;
+        _effect_ = o._effect_;
+        _doors_ = o._doors_;
+        _selection_mask_ = o._selection_mask_;
+        _selection_size_ = o._selection_size_;
+        _cur_ = o._cur_;
+        _bn_ = o._bn_;
+        _nodiPath_ = o._nodiPath_;
+        return *this;
+    }
 
-    //   Yields
-    //   -------
-    //   List[int]
-    //     the different frontdoors
-    //   """
-    //   if isParent(x, y, bn):
-    //     return
+    template<typename GUM_SCALAR>
+    frontdoor_iterator<GUM_SCALAR>::frontdoor_iterator
+        (const std::shared_ptr<BayesNet<GUM_SCALAR>> bn, const std::shared_ptr<NodeSet> possible, NodeId cause, NodeId effect, bool nodiPath)
+        : door_iterator(
+            false, 
+            true,
+            nullptr, 
+            possible, 
+            cause, 
+            effect, 
+            gum::Set<NodeSet>(), 
+            std::vector<bool>(possible->size(), false), 
+            0,
+            NodeSet({})), 
+            _bn_(bn),
+            _nodiPath_(nodiPath)
 
-    //   if not_fd is None:
-    //     not_fd = set()
+    {}
 
-    //   possible = nodes_on_dipath(bn, x, y)
-    //   nodiPath = False
-    //   if possible is None:
-    //     nodiPath = True
-    //     possible = set(bn.nodes()) - {x, y}
-    //   possible -= backdoor_reach(bn, x)
-    //   possible -= not_fd
-    //   impossible = set()
-    //   g = dSep_reduce(bn, {x, y} | possible)
-    //   for z in possible:
-    //     if backdoor_path(g, {z}, {y}, {x}):
-    //       impossible.add(z)
-    //   possible -= impossible
-    //   frontdoors = set()
 
-    //   if nodiPath:
-    //     for s in possible:
-    //       yield [s]
-    //     return
-
-    //   for i in range(len(possible)):
-    //     for subset in it.combinations(possible, i + 1):
-    //       sub = frozenset(subset)
-    //       worth_testing = True
-    //       for s in frontdoors:
-    //         if s <= sub:
-    //           worth_testing = False
-    //       if worth_testing and not exists_unblocked_directed_path(bn, x, y, sub):
-    //         frontdoors.add(sub)
-    //         yield list(subset)
+    template<typename GUM_SCALAR>
+    bool frontdoor_iterator<GUM_SCALAR>::_next_(){
+        if(_nodiPath_){
+            if(_selection_size_ >= _possible_->size()) return false;
+            _cur_ = Set({(*_possible_)[_selection_size_++]});
+            return true;
+        }
+        if(!_advance_selection_mask_()) return false; 
+        _gen_cur_();
+        bool worth_testing = true;
+        for(auto& s : _doors_){
+            if(s.isSubsetOrEqual(_cur_)) worth_testing = false;
+        }
+        if(worth_testing && !exists_unblocked_directed_path(_bn_, _cause_, _effect_, _cur_)){
+            _doors_.insert(_cur_);
+            return true;
+        }else{
+            return _next_(); // skip this as this is an invalid set
+        }
+    }
 
 }

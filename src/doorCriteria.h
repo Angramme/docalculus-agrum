@@ -106,10 +106,11 @@ namespace gum{
 
     /**
      * @brief Base iterator class for iterating over backdoors of a BayesNet
-     * In order to use this class, call backdoor_generator function.
+     * In order to use this class, call backdoor_generator or frontdoor_generator.
      * 
      */
-    struct backdoor_iterator_base { //  TODO: docs
+    class door_iterator { 
+    public:
         using iterator_category = std::input_iterator_tag;
         using difference_type   = std::ptrdiff_t;
         using value_type        = NodeSet;
@@ -117,22 +118,28 @@ namespace gum{
         using reference         = const value_type&;
 
     protected:
+
         bool _is_the_end_;
+        bool _is_front_door_;
         std::shared_ptr<DAG> _G_;
         std::shared_ptr<NodeSet> _possible_;
         NodeId _cause_;
         NodeId _effect_;
-        Set<NodeSet> _backdoors_;
+        Set<NodeSet> _doors_;
         std::vector<bool> _selection_mask_;
         size_t _selection_size_; //< inclusion mask for possible NodeSet
         value_type _cur_;
 
-        friend struct backdoor_iterator;
-        friend bool operator==(const backdoor_iterator_base& a, const backdoor_iterator_base& b);
-        friend bool operator!=(const backdoor_iterator_base& a, const backdoor_iterator_base& b);
+        friend class backdoor_iterator;
+        template<typename GUM_SCALAR>
+        friend class frontdoor_iterator;
+        friend bool operator==(const door_iterator& a, const door_iterator& b);
+        friend bool operator!=(const door_iterator& a, const door_iterator& b);
+        friend constexpr door_iterator door_iterator_end(bool is_frontdoor);
 
-        backdoor_iterator_base(
+        door_iterator(
             bool is_the_end,
+            bool is_front_door,
             std::shared_ptr<DAG> G,
             std::shared_ptr<NodeSet> possible,
             NodeId cause,
@@ -143,55 +150,122 @@ namespace gum{
             value_type cur
         ) :
             _is_the_end_(is_the_end),
+            _is_front_door_(is_front_door),
             _G_(G),
             _possible_(possible),
             _cause_(cause),
             _effect_(effect),
-            _backdoors_(backdoors),
+            _doors_(backdoors),
             _selection_mask_(selection_mask),
             _selection_size_(selection_size),
             _cur_(cur)
         {}
-    };
-    struct backdoor_iterator : public backdoor_iterator_base { // TODO: docs
-    private:
-        inline static const backdoor_iterator_base _get_end(){
-            return backdoor_iterator_base::backdoor_iterator_base( true, nullptr, nullptr, 0, 0, Set<NodeSet>({}), std::vector<bool>({}), 0, NodeSet({}) );
-        }
-    public:
-        inline static const backdoor_iterator_base end = _get_end();
+        door_iterator(bool is_frontdoor)
+            : door_iterator(true, is_frontdoor, nullptr, nullptr, 0, 0, Set<NodeSet>({}), std::vector<bool>({}), 0, NodeSet({}))
+        {}
 
+        bool _advance_selection_mask_();
+        void _gen_cur_();
+
+    public:
+        /**
+         * @brief Dereference operator 
+         * 
+         * @return reference 
+        */
         reference operator*() const;
+        /**
+         * @brief Pointer operator
+         * 
+         * @return pointer 
+         */
         pointer operator->() const;
-        
+    };
+
+    class backdoor_iterator : public door_iterator {
+    public:
         /**
          * @brief x++ operator for backdoor_iterator
-         * 
          * @return backdoor_iterator& 
          */
         backdoor_iterator& operator++();
 
         /**
          * @brief WARNING, performs a complete copy of this structure! Potentially slow, always prefer ++x operator!!! 
-         * 
          * @return backdoor_iterator 
+         * @warning WARNING, performs a complete copy of this structure! Potentially slow, always prefer ++x operator!!! 
          */
-        backdoor_iterator operator++(int);  // TODO: optimize this
+        backdoor_iterator operator++(int);  // TODO: optimize this si j'ai la foie
         
         backdoor_iterator(backdoor_iterator&& v) = default;
         backdoor_iterator(backdoor_iterator& v) = default;
         backdoor_iterator& operator=(backdoor_iterator&& v);
 
-
-        template<typename GUM_SCALAR>
-        friend backdoor_iterator backdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_bd);
+        // template<typename GUM_SCALAR>
+        // friend backdoor_iterable backdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_bd);
+        template<typename iter>
+        friend class door_iterable;
     protected:
+        using door_iterator::door_iterator;
         backdoor_iterator(const std::shared_ptr<DAG> G, const std::shared_ptr<NodeSet> possible, NodeId cause, NodeId effect);
         bool _next_();
-        bool _advance_selection_mask_();
-        void _gen_cur_();
     };
-    static_assert(std::input_iterator<backdoor_iterator>); 
+    static_assert(std::input_iterator<backdoor_iterator>);
+
+    template<typename GUM_SCALAR>
+    class frontdoor_iterator : public door_iterator {
+    private:
+        std::shared_ptr<BayesNet<GUM_SCALAR>> _bn_;
+        bool _nodiPath_;
+    public:
+        /**
+         * @brief x++ operator for frontdoor_iterator
+         * @return frontdoor_iterator& 
+         */
+        frontdoor_iterator& operator++();
+
+        /**
+         * @brief WARNING, performs a complete copy of this structure! Potentially slow, always prefer ++x operator!!! 
+         * @return frontdoor_iterator 
+         * @warning WARNING, performs a complete copy of this structure! Potentially slow, always prefer ++x operator!!! 
+         */
+        frontdoor_iterator operator++(int);  // TODO: optimize this si j'ai la foie
+        
+        frontdoor_iterator(frontdoor_iterator<GUM_SCALAR>&& v) = default;
+        frontdoor_iterator(frontdoor_iterator<GUM_SCALAR>& v) = default;
+        frontdoor_iterator& operator=(frontdoor_iterator<GUM_SCALAR>&& v);
+
+        // template<typename GUM_SCALAR>
+        // friend frontdoor_iterable frontdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_bd);
+        template<typename iter>
+        friend class door_iterable;
+    protected:
+        using door_iterator::door_iterator;
+        frontdoor_iterator(const std::shared_ptr<BayesNet<GUM_SCALAR>> bn, const std::shared_ptr<NodeSet> possible, NodeId cause, NodeId effect, bool nodiPath);
+        bool _next_();
+    };
+    // static_assert(std::input_iterator<frontdoor_iterator>);
+
+    template<typename iter>
+    class door_iterable{ 
+    private: 
+        const iter _begin; 
+        const iter _end; 
+    protected: 
+        inline door_iterable(iter&& begin, iter&& end) : _begin(begin), _end(end) {} 
+        inline door_iterable() : _begin(!std::is_same<iter, backdoor_iterator>::value), _end(!std::is_same<iter, backdoor_iterator>::value) {}
+    public: 
+        inline iter begin() const { return _begin; }; 
+        inline iter end() const { return _end; }; 
+
+        template<typename GUM_SCALAR>
+        friend door_iterable<backdoor_iterator> backdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_bd);
+        template<typename GUM_SCALAR>
+        friend door_iterable<frontdoor_iterator<GUM_SCALAR>> frontdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_bd);
+    };
+    using backdoor_iterable = door_iterable<backdoor_iterator>;
+    template<typename GUM_SCALAR>
+    using frontdoor_iterable = door_iterable<frontdoor_iterator<GUM_SCALAR>>;
 
     /**
      * @brief Generates backdoor sets for the pair of nodes `(cause, effect)` in the graph `bn` excluding the nodes in the set `not_bd` (optional)
@@ -204,11 +278,20 @@ namespace gum{
      * @return backdoor_iterator 
      */
     template<typename GUM_SCALAR>
-    backdoor_iterator backdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_bd = {});
-
-
-    // TODO: add frontdoor generator and iterator, make a base class and derive
-    // replace the error-prone logic with the use of cppitertools/combinations iterator
+    backdoor_iterable backdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_bd = NodeSet({}));
+    
+    /**
+     * @brief Generates frontdoor sets for the pair of nodes `(cause, effect)` in the graph `bn` excluding the nodes in the set `not_fd` (optional)
+     * 
+     * @tparam GUM_SCALAR 
+     * @param bn 
+     * @param cause 
+     * @param effect 
+     * @param not_fd 
+     * @return backdoor_iterator 
+     */
+    template<typename GUM_SCALAR>
+    frontdoor_iterable<GUM_SCALAR> frontdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_fd = NodeSet({}));
 };
 
 #include "doorCriteria_tpl.h"
