@@ -14,7 +14,6 @@
 #include <agrum/BN/inference/lazyPropagation.h>
 #include <string>
 #include <tuple>
-#include <optional>
 #include <stdexcept>
 
 
@@ -36,11 +35,11 @@ namespace gum{
      *  of ``on`` is simply returned. If the impact is not identifiable the formula and the
      *  adjustment will be ``None`` but an explanation is still given. 
      *
-     * @param cm CausalModel : the causal model
-     * @param on str|NameSet : variable name or variable names set of interest
-     * @param doing str|NameSet : the interventions
-     * @param knowing str|NameSet : the observations
-     * @param values Dict[str,int] default=None : the values of interventions and observations
+     * @param cm the causal model
+     * @param on variable name or variable names set of interest
+     * @param doing the interventions
+     * @param knowing the observations
+     * @param values the values of interventions and observations
      * @return Tuple[CausalFormula,pyAgrum.Potential,str] the CausalFormula, the computation,
      *       the explanation
      * @throws HedgeException
@@ -69,11 +68,11 @@ namespace gum{
      * formula and the adjustment will be ``None`` but an explanation is
      * still given. 
      *
-     * @param cm CausalModel : the causal model
-     * @param on str|Set[str] : targeted variable(s)
-     * @param doing str|Set[str] : interventions
-     * @param knowing str|Set[str] : observations
-     * @return Tuple[CausalFormula,pyAgrum.Potential,str] the latex representation,
+     * @param cm the causal model
+     * @param on  targeted variable(s)
+     * @param doing interventions
+     * @param knowing observations
+     * @return Tuple[CausalFormula,Potential,str] the latex representation,
      *     the computation, the explanation
      * @throws HedgeException
      */
@@ -99,8 +98,8 @@ namespace gum{
      * the causal model) This function returns the twin CausalModel.
      *
      * @param cm CausalModel
-     * @param profile Dict[str,int] : evidence
-     * @param whatif str|Set[str] : idiosyncratic nodes
+     * @param profile evidence
+     * @param whatif idiosyncratic nodes
      * @return CausalModel the twin CausalModel
      */ 
     template<typename GUM_SCALAR>
@@ -130,11 +129,11 @@ namespace gum{
      * "values" (if "values" is omitted, every possible value of "whatif")
      *
      * @param cm CausalModel :
-     * @param profile Dict[str,int] default=None : evidence
-     * @param on variable name or variable names set : the variable(s) of interest
-     * @param whatif str|Set[str] : idiosyncratic nodes
-     * @param values Dict[str,int] : values for certain variables in whatif.
-     * @return pyAgrum.Potential the computed counterfactual impact
+     * @param profile evidence
+     * @param on the variable(s) of interest
+     * @param whatif idiosyncratic nodes
+     * @param values values for certain variables in whatif.
+     * @return the computed counterfactual impact
      * @throws HedgeException
      */
     template<typename GUM_SCALAR>
