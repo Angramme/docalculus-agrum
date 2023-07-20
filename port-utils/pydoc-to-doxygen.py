@@ -1,5 +1,13 @@
 import re
 import sys
+from textwrap import wrap
+
+NEWLINE = '\n'
+WRAP_X = 70
+
+def wrapp(txt, extra_indent=False):
+    padd = NEWLINE + ("     * " if not extra_indent else "     *     ")
+    return padd.join(wrap(txt.replace(NEWLINE, padd), WRAP_X))
 
 def clean(txt):
     txt = txt
@@ -60,13 +68,12 @@ def trans_comment(txt):
     return (clean(des), clean(ret.replace('\n', ' ')) if ret else ret, pars)
 
 def doxygen(description, return_desc, parameters):
-    NEWLINE = '\n'
     return f'''
     /**
-     * @brief {description.replace(NEWLINE, NEWLINE+"     * ")}
+     * @brief {wrapp(description)}
      * 
-     {f'* @param {(NEWLINE+"     * @param ").join(map(lambda x: f"{x[0]} {x[1]} : {x[2]}", parameters))}' if parameters else ""}
-     {"* @return " + return_desc if return_desc else ""} 
+     {f'* @param {(NEWLINE+"     * @param ").join(map(lambda x: f"{x[0]} {x[1]} : {wrapp(x[2], True)}", parameters))}' if parameters else ""}
+     {"* @return " + wrapp(return_desc, True) if return_desc else ""} 
      */
     '''
 

@@ -1,3 +1,7 @@
+#ifndef _CAUSAL_EXCEPTIONS_H_
+#define _CAUSAL_EXCEPTIONS_H_
+
+
 #include <iostream>
 #include <agrum/tools/core/set.h>
 #include <string>
@@ -63,3 +67,5 @@ namespace gum{
         }
     };
 }
+
+#endif

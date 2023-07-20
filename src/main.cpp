@@ -4,6 +4,7 @@
 
 #include "CausalModel.h"
 #include "CausalFormula.h"
+#include "CausalImpact.h"
 #include "doorCriteria.h"
 #include "dSeparation.h"
 #include "doCalculus.h"
