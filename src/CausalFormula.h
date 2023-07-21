@@ -54,6 +54,9 @@ namespace gum{
             const std::set<std::string>& doing, 
             const std::set<std::string>& knowing);
 
+        CausalFormula() = delete;
+        ~CausalFormula();
+
         /**
          * @brief Prints the object
          *

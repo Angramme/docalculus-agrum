@@ -8,8 +8,6 @@
 #include "exceptions.h"
 #include "dSeparation.h"
 #include "agrum/tools/graphs/undiGraph.h"
-#include "combinations.hpp"
-#include "imap.hpp"
 
 #include <sstream>
 

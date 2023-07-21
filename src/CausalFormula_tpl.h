@@ -11,7 +11,14 @@ namespace gum{
         const std::set<std::string>& knowing
     ) 
         : _cm_(cm), _root_(root), _on_(on), _doing_(doing), _knowing_(knowing)
-    {}
+    {
+        GUM_CONSTRUCTOR(CausalFormula)
+    }
+
+    template<typename GUM_SCALAR>
+    CausalFormula<GUM_SCALAR>::~CausalFormula() {
+        GUM_DESTRUCTOR(CausalFormula)
+    }
 
     template<typename GUM_SCALAR>
     std::string CausalFormula<GUM_SCALAR>::_print_(const std::string& pre) const{

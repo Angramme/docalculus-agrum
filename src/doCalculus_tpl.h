@@ -232,14 +232,19 @@ namespace gum{
             }
 
             auto prod = productOfTrees(prb);
-            if((S - Y).size() == 0) return prod;
+            auto SminY = S - Y;
+            if((SminY).size() == 0) return prod;
 
-            auto ilsy = imap([&](std::string& x){ return cm.idFromName(x); }, S - Y);
+            auto ilsy = std::vector<NodeId>(SminY.size());
+            {
+                size_t i = 0;
+                for(const auto& x : SminY) ilsy[i++](cm.idFromName(x));
+            }
             return ASTsum(ilsy.begin(), ilsy.end(), prod);
         }
 
         // step 7 ---------------------------
-        for(const auto& ispr : cdg){
+        for(const auto& ispr : cdg){ // TODO: reecrire code qui utilise imap et combinations
             if(iS > ispr) continue;
             auto spr = imap([&](NodeId i){ return cm.names()[i]; }, ispr);
             auto prb = std::vector<ASTtree<GUM_SCALAR>>();

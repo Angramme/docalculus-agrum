@@ -21,11 +21,7 @@ namespace gum{
         if((on + doing + knowing).size() > 0)
             throw std::invalid_argument("The 3 parts of the query (on, doing, knowing) must not intersect!");
 
-        CausalFormula<GUM_SCALAR> formula;
-        Potential<GUM_SCALAR> potential;
-        std::string explanation;
-
-        std::tie(formula, potential, explanation) = _causalImpact(cm, on, doing, knowing);
+        const auto& [formula, potential, explanation] = _causalImpact(cm, on, doing, knowing);
         
         auto sv = potential.names();
         {
@@ -133,7 +129,7 @@ namespace gum{
         CausalModel ret = cm;
         auto& bn = ret.observationalBN();
 
-        auto posteriors = HashTable<NodeId, Potential<GUM_SCALAR>>(); // TODO
+        auto posteriors = HashTable<NodeId, Potential<GUM_SCALAR>>(); 
         auto ie = LazyPropagation(bn);
         ie.setEvidence(profile);
         ie.makeInference();

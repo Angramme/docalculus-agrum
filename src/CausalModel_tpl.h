@@ -30,12 +30,21 @@ namespace gum{
 
       for(const auto& p : latentVarDescriptors)
          addLatentVariable(p.first, p.second, keepArcs);
+
+      GUM_CONSTRUCTOR(CausalModel);
    }
 
    template <typename GUM_SCALAR>
    CausalModel<GUM_SCALAR>::CausalModel(const CausalModel& ot)
       : _ob_BN_(ot._ob_BN_), _keepArcs_(ot._keepArcs_), _ca_BN_(ot._ca_BN_), _lat_(ot._lat_), _names_(ot._names_)
-   {}
+   {
+      GUM_CONS_CPY(CausalModel);
+   }
+
+   template <typename GUM_SCALAR>
+   CausalModel<GUM_SCALAR>::~CausalModel(){
+      GUM_DESTRUCTOR(CausalModel);
+   }
 
    template <typename GUM_SCALAR>
    void CausalModel<GUM_SCALAR>::addLatentVariable(const std::string& name, const std::vector<std::string>& lchild, bool keepArcs){
@@ -349,8 +358,12 @@ namespace gum{
 
    
    template <typename GUM_SCALAR>
-   DAGmodel& CausalModel<GUM_SCALAR>::operator=(const DAGmodel& source){
-      return _ca_BN_.operator=(source);
+   CausalModel<GUM_SCALAR>& CausalModel<GUM_SCALAR>::operator=(const CausalModel<GUM_SCALAR>& source){
+      _ob_BN_ = source._ob_BN_;
+      _ca_BN_ = source._ca_BN_;
+      _keepArcs_ = source._keepArcs_;
+      _lat_ = source._lat_;
+      _names_ = source._names_;
    }
 
    

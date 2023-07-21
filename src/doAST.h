@@ -20,9 +20,7 @@ namespace gum{
     // I know, I know, a bit ugly, but this was by far the most elegant solution compared to CRTP clone semantics 
     // or even copy-pasting the whole function by hand everywhere
     #define ___ASTtree_clone_function_injector_MACRO___ \
-        virtual std::unique_ptr<ASTtree<GUM_SCALAR>> clone() const override { \
-            return std::unique_ptr<ASTtree<GUM_SCALAR>>(new std::remove_const_t<std::remove_reference_t<decltype(*this)>>(*this)); \
-        }
+        virtual std::unique_ptr<ASTtree<GUM_SCALAR>> clone() const override;
     
     /**
      * @brief Represents a generic node for the CausalFormula. The type of the node will be registered in a string.
@@ -30,8 +28,6 @@ namespace gum{
      */
     template<typename GUM_SCALAR>
     class ASTtree{
-    private:
-        std::string _type_; // TODO: relpace this with a virtual override function... maybe?
     protected:
         static bool _verbose_;
         static std::string _continueNextLine_;
@@ -41,10 +37,11 @@ namespace gum{
         /**
          * @brief Represents a generic node for the CausalFormula. The type of the node will be registered in a string.
          * 
-         * @param typ the type of the node (will be specified in concrete children classes.
          * @param verbose if True, add some messages
          */
-        ASTtree(const std::string& typ);
+        ASTtree();
+        ASTtree(const ASTtree<GUM_SCALAR>& other);
+        ~ASTtree();
 
         /**
          * @brief Set the Verbosity of messages.
@@ -64,13 +61,25 @@ namespace gum{
         static bool getVerbosity();
 
         /**
+         * @brief Set the newline prefix used inside _print_ function.
+         * 
+         * @param val 
+         */
+        static void setContinueNextLine(const std::string& val);
+        
+        /**
+         * @brief Get the newline prefix used inside _print_ function.
+         * 
+         * @param val 
+         */
+        static const std::string& getContinueNextLine();
+
+        /**
          * @brief type getter
          * 
          * @return const std::string& 
          */
-        const std::string& type() const {
-            return _type_;
-        }
+        virtual std::string type() const = 0;
 
         /**
          * @brief Create a LaTeX representation from ASTtree
@@ -182,11 +191,10 @@ namespace gum{
          * @param op2 right operand
          * @param verbose if True, add some messages
          */
-        ASTBinaryOp(const std::string& typ, std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2);
-
-        ASTBinaryOp(const ASTBinaryOp<GUM_SCALAR>& other)
-            : ASTtree<GUM_SCALAR>(static_cast<const ASTtree<GUM_SCALAR>&>(other)), _op1_(std::move(other._op1_->clone())), _op2_(std::move(other._op2_->clone()))
-        {}
+        ASTBinaryOp(std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2);
+        ASTBinaryOp(const ASTBinaryOp<GUM_SCALAR>& other);
+        ~ASTBinaryOp();
+        ASTBinaryOp() = delete;
 
         /**
          * @brief get left operand
@@ -233,6 +241,12 @@ namespace gum{
          * @param op2 right operand
          */
         ASTplus(std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2);
+        ASTplus() = delete;
+        ASTplus(const ASTplus<GUM_SCALAR>& other);
+        ~ASTplus();
+
+        /// override of @ref ASTtree::type
+        virtual std::string type() const override;
 
         /**
          * @brief Evaluation of a AST tree from inside a BN
@@ -265,6 +279,12 @@ namespace gum{
          * @param op2 right operand
          */
         ASTminus(std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2);
+        ASTminus() = delete;
+        ASTminus(const ASTminus<GUM_SCALAR>& other);
+        ~ASTminus();
+
+        /// override of @ref ASTtree::type
+        virtual std::string type() const override;
 
         /**
          * @brief Evaluation of a AST tree from inside a BN
@@ -298,6 +318,12 @@ namespace gum{
          * @param op2 right operand
          */
         ASTmult(std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2);
+        ASTmult() = delete;
+        ASTmult(const ASTmult<GUM_SCALAR>& other);
+        ~ASTmult();
+
+        /// override of @ref ASTtree::type
+        virtual std::string type() const override;
 
         /**
          * @brief Evaluation of a AST tree from inside a BN
@@ -329,6 +355,12 @@ namespace gum{
          * @param op2 right operand
          */
         ASTdiv(std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2);
+        ASTdiv() = delete;
+        ASTdiv(const ASTdiv<GUM_SCALAR>& other);
+        ~ASTdiv();
+
+        /// override of @ref ASTtree::type
+        virtual std::string type() const override;
 
         /**
          * @brief Evaluation of a AST tree from inside a BN
@@ -367,6 +399,12 @@ namespace gum{
          * @param knwset a set of variable names (in the BN) conditioning in the posterior
          */
         ASTPosteriorProba(const std::shared_ptr<BayesNet<GUM_SCALAR>> bn, const std::shared_ptr<NameSet> varset, const std::shared_ptr<NameSet> knwset);
+        ASTPosteriorProba() = delete;
+        ASTPosteriorProba(const ASTPosteriorProba<GUM_SCALAR>& other);
+        ~ASTPosteriorProba();
+
+        /// override of @ref ASTtree::type
+        virtual std::string type() const override;
 
         /**
          * @brief (Conditioned) vars in \f( P_{bn}(vars|knw) \f)
@@ -422,6 +460,12 @@ namespace gum{
          * @param varNames a set of variable names
          */
         ASTJointProba(const std::shared_ptr<NameSet> varNames);
+        ASTJointProba() = delete;
+        ASTJointProba(const ASTJointProba<GUM_SCALAR>& other);
+        ~ASTJointProba();
+
+        /// override of @ref ASTtree::type
+        virtual std::string type() const override;
 
         /**
          * @brief returns the set of names of car
@@ -458,9 +502,12 @@ namespace gum{
         const std::unique_ptr<ASTtree<GUM_SCALAR>> _term_;
     public:
 
-        ASTsum(const ASTsum<GUM_SCALAR>& other)
-            : ASTtree<GUM_SCALAR>(static_cast<const ASTtree<GUM_SCALAR>&>(other)), _var_(other._var_), _term_(std::move(other._term_->clone()))
-        {}
+        ASTsum(const ASTsum<GUM_SCALAR>& other);
+        ASTsum() = delete;
+        ~ASTsum();
+
+        /// override of @ref ASTtree::type
+        virtual std::string type() const override;
     
         /**
          * @brief Represents a sum over a variable of an ASTtree

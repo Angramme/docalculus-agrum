@@ -110,9 +110,9 @@ namespace gum{
     }
 
     template<typename GUM_SCALAR> // TODO: giga tester ca
-    backdoor_iterable backdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_bd){
-        if(bn.parents(cause).size() == 0) return backdoor_iterable(); // empty
-        if(isParent(effect, cause, bn)) return backdoor_iterable(); // empty
+    BackdoorIterable backdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_bd){
+        if(bn.parents(cause).size() == 0) return BackdoorIterable(); // empty
+        if(isParent(effect, cause, bn)) return BackdoorIterable(); // empty
 
         // simplify the graph
         auto interest = NodeSet({cause, effect});
@@ -132,14 +132,14 @@ namespace gum{
         }
 
         auto possible = G->nodes() - (bn.descendants(cause, {}) + interest + not_bd);
-        if(possible.size() == 0) return backdoor_iterable();
+        if(possible.size() == 0) return BackdoorIterable();
 
-        return backdoor_iterable(backdoor_iterator(G, possible, cause, effect), backdoor_iterator());
+        return BackdoorIterable(BackdoorIterator(G, possible, cause, effect), BackdoorIterator());
     }
 
     template<typename GUM_SCALAR> // TODO: giga tester ca
-    frontdoor_iterable<GUM_SCALAR> frontdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_fd){
-        if(isParent(cause, effect, bn)) return frontdoor_iterable(); // empty
+    FrontdoorIterable<GUM_SCALAR> frontdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_fd){
+        if(isParent(cause, effect, bn)) return FrontdoorIterable(); // empty
         auto possible = nodes_on_dipath(bn, cause, effect);
         bool nodiPath = false;
         if(possible){
@@ -158,44 +158,13 @@ namespace gum{
         }
         *possible -= impossible;
 
-        return frontdoor_iterable(frontdoor_iterator(bn, *possible, cause, effect, nodiPath), frontdoor_iterator());
-    }
-
-
-    template<typename GUM_SCALAR>
-    frontdoor_iterator<GUM_SCALAR>& frontdoor_iterator<GUM_SCALAR>::operator++() {
-        if(_next_()) return *this;
-        _is_the_end_ = true;
-        return *this;
+        return FrontdoorIterable(FrontdoorIterator(bn, *possible, cause, effect, nodiPath), FrontdoorIterator());
     }
 
     template<typename GUM_SCALAR>
-    frontdoor_iterator<GUM_SCALAR> frontdoor_iterator<GUM_SCALAR>::operator++(int) {
-        frontdoor_iterator tmp = *this; ++(*this); 
-        return tmp;
-    }
-
-    template<typename GUM_SCALAR>
-    frontdoor_iterator<GUM_SCALAR>& frontdoor_iterator<GUM_SCALAR>::operator=(frontdoor_iterator<GUM_SCALAR>&& o) {
-        _is_the_end_ = o._is_the_end_;
-        _is_front_door_ = o._is_front_door_;
-        _G_ = o._G_;
-        _possible_ = o._possible_;
-        _cause_ = o._cause_;
-        _effect_ = o._effect_;
-        _doors_ = o._doors_;
-        _selection_mask_ = o._selection_mask_;
-        _selection_size_ = o._selection_size_;
-        _cur_ = o._cur_;
-        _bn_ = o._bn_;
-        _nodiPath_ = o._nodiPath_;
-        return *this;
-    }
-
-    template<typename GUM_SCALAR>
-    frontdoor_iterator<GUM_SCALAR>::frontdoor_iterator
+    FrontdoorIterator<GUM_SCALAR>::FrontdoorIterator
         (const std::shared_ptr<BayesNet<GUM_SCALAR>> bn, const std::shared_ptr<NodeSet> possible, NodeId cause, NodeId effect, bool nodiPath)
-        : door_iterator(
+        : DoorIterator(
             false, 
             true,
             nullptr, 
@@ -209,11 +178,58 @@ namespace gum{
             _bn_(bn),
             _nodiPath_(nodiPath)
 
-    {}
+    {
+        GUM_CONSTRUCTOR(FrontdoorIterator)
+    }
+    template<typename GUM_SCALAR>
+    FrontdoorIterator<GUM_SCALAR>::FrontdoorIterator(FrontdoorIterator<GUM_SCALAR>&& v)
+        : DoorIterator(v),  _bn_(std::move(v._bn_)), _nodiPath_(std::exchange(v._nodiPath_, false))
+    {
+        GUM_CONS_MOV(FrontdoorIterator)
+    }
+    template<typename GUM_SCALAR>
+    FrontdoorIterator<GUM_SCALAR>::FrontdoorIterator(const FrontdoorIterator<GUM_SCALAR>& v)
+        : DoorIterator(v),  _bn_(v._bn_), _nodiPath_(v._nodiPath_)
+    {
+        GUM_CONS_CPY(FrontdoorIterator)
+    }
+    template<typename GUM_SCALAR>
+    FrontdoorIterator<GUM_SCALAR>::~FrontdoorIterator(){
+        GUM_DESTRUCTOR(FrontdoorIterator)
+    }
+    template<typename GUM_SCALAR>
+    FrontdoorIterator<GUM_SCALAR>& FrontdoorIterator<GUM_SCALAR>::operator=(FrontdoorIterator<GUM_SCALAR>&& v){
+        DoorIterator::operator=(v);
+        _bn_ = std::move(v._bn_);
+        _nodiPath_ = std::exchange(v._nodiPath_, false);
+        GUM_OP_MOV(FrontdoorIterator)
+        return *this;
+    }
+    template<typename GUM_SCALAR>
+    FrontdoorIterator<GUM_SCALAR>& FrontdoorIterator<GUM_SCALAR>::operator=(const FrontdoorIterator<GUM_SCALAR>& v){
+        DoorIterator::operator=(v);
+        _bn_ = v._bn_;
+        _nodiPath_ = v._nodiPath_;
+        GUM_OP_CPY(FrontdoorIterator)
+        return *this;
+    }
 
 
     template<typename GUM_SCALAR>
-    bool frontdoor_iterator<GUM_SCALAR>::_next_(){
+    FrontdoorIterator<GUM_SCALAR>& FrontdoorIterator<GUM_SCALAR>::operator++() {
+        if(_next_()) return *this;
+        _is_the_end_ = true;
+        return *this;
+    }
+
+    template<typename GUM_SCALAR>
+    FrontdoorIterator<GUM_SCALAR> FrontdoorIterator<GUM_SCALAR>::operator++(int) {
+        FrontdoorIterator tmp = *this; ++(*this); 
+        return tmp;
+    }
+
+    template<typename GUM_SCALAR>
+    bool FrontdoorIterator<GUM_SCALAR>::_next_(){
         if(_nodiPath_){
             if(_selection_size_ >= _possible_->size()) return false;
             _cur_ = Set({(*_possible_)[_selection_size_++]});

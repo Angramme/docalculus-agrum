@@ -21,7 +21,6 @@ namespace gum{
     using NameSet = Set<std::string>;
 
     // TODO: add boundary (and connectedComponents) everywhere where there is parents or neighbours or children...
-    // TODO: add GUM CONSTRUCTOR and DESCTRUCTOR MACROS...
 
     /**
      * @brief Determines the causal impact of interventions. Determines the causal impact

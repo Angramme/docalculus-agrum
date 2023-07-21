@@ -50,6 +50,9 @@ namespace gum{
                );
 
       CausalModel(const CausalModel& ot);
+
+      CausalModel() = delete;
+      ~CausalModel();
     
       /**
        * @brief Add a new latent variable with a name, a pair of children and replacing (or not) correlations between children.
@@ -399,7 +402,7 @@ namespace gum{
       /**
        * Private copy operator.
        */
-      DAGmodel& operator=(const DAGmodel& source);
+      CausalModel<GUM_SCALAR>& operator=(const CausalModel<GUM_SCALAR>& source);
    };
 
    /**

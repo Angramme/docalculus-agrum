@@ -27,11 +27,32 @@ namespace gum{
     bool ASTtree<GUM_SCALAR>::getVerbosity() {
         return _verbose_;
     }
+
+    template<typename GUM_SCALAR>
+    void ASTtree<GUM_SCALAR>::setContinueNextLine(const std::string& value){
+        _continueNextLine_ = value;
+    }
+
+    template<typename GUM_SCALAR>
+    const std::string& ASTtree<GUM_SCALAR>::getContinueNextLine() {
+        return _continueNextLine_;
+    }
     
     template<typename GUM_SCALAR>
-    ASTtree<GUM_SCALAR>::ASTtree(const std::string& typ)
-        : _type_(typ)
-    {}
+    ASTtree<GUM_SCALAR>::ASTtree() {
+        GUM_CONSTRUCTOR(ASTtree)
+    }
+
+    template<typename GUM_SCALAR>
+    ASTtree<GUM_SCALAR>::ASTtree(const ASTtree<GUM_SCALAR>& other) {
+        GUM_CONS_CPY(ASTtree);
+    }
+
+    template<typename GUM_SCALAR>
+    ASTtree<GUM_SCALAR>::~ASTtree(){
+        GUM_DESTRUCTOR(ASTtree);
+    }
+
 
     template<typename GUM_SCALAR>
     constexpr std::string ASTtree<GUM_SCALAR>::_latext_var_present_(
@@ -66,9 +87,23 @@ namespace gum{
     { return _latext_var_present_(src.cbegin(), src.cend(), nameOccur); }
 
     template<typename GUM_SCALAR>
-    ASTBinaryOp<GUM_SCALAR>::ASTBinaryOp(const std::string& typ, std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2)
-        : ASTtree<GUM_SCALAR>(typ), _op1_(std::move(op1)), _op2_(std::move(op2))
-    {}
+    ASTBinaryOp<GUM_SCALAR>::ASTBinaryOp(std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2)
+        : _op1_(std::move(op1)), _op2_(std::move(op2))
+    {
+        GUM_CONSTRUCTOR(ASTBinaryOp)
+    }
+
+    template<typename GUM_SCALAR>
+    ASTBinaryOp<GUM_SCALAR>::ASTBinaryOp(const ASTBinaryOp<GUM_SCALAR>& other)
+        : ASTtree<GUM_SCALAR>(static_cast<const ASTtree<GUM_SCALAR>&>(other)), _op1_(std::move(other._op1_->clone())), _op2_(std::move(other._op2_->clone()))
+    {
+        GUM_CONS_CPY(ASTBinaryOp)
+    }
+
+    template<typename GUM_SCALAR>
+    ASTBinaryOp<GUM_SCALAR>::~ASTBinaryOp(){
+        GUM_DESTRUCTOR(ASTBinaryOp)
+    }
 
     template<typename GUM_SCALAR>
     void ASTBinaryOp<GUM_SCALAR>::_print_(std::ostream& outs, int indent) const {
@@ -81,8 +116,27 @@ namespace gum{
 
     template<typename GUM_SCALAR>
     ASTplus<GUM_SCALAR>::ASTplus(std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2)
-        : ASTBinaryOp<GUM_SCALAR>("+", std::move(op1), std::move(op2))
-    {}
+        : ASTBinaryOp<GUM_SCALAR>(std::move(op1), std::move(op2))
+    {
+        GUM_CONSTRUCTOR(ASTplus);
+    }
+
+    template<typename GUM_SCALAR>
+    ASTplus<GUM_SCALAR>::ASTplus(const ASTplus<GUM_SCALAR>& other) 
+        : ASTBinaryOp<GUM_SCALAR>(other)
+    {
+        GUM_CONS_CPY(ASTplus);
+    }
+
+    template<typename GUM_SCALAR>
+    ASTplus<GUM_SCALAR>::~ASTplus() {
+        GUM_DESTRUCTOR(ASTplus);
+    }
+
+    template<typename GUM_SCALAR>
+    std::string ASTplus<GUM_SCALAR>::type() const {
+        return "+";
+    }
 
     template<typename GUM_SCALAR>
     Potential<GUM_SCALAR> ASTplus<GUM_SCALAR>::eval(const BayesNet<GUM_SCALAR>& bn) const {
@@ -105,8 +159,27 @@ namespace gum{
 
     template<typename GUM_SCALAR>
     ASTminus<GUM_SCALAR>::ASTminus(std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2)
-        : ASTBinaryOp<GUM_SCALAR>("-", std::move(op1), std::move(op2))
-    {}
+        : ASTBinaryOp<GUM_SCALAR>(std::move(op1), std::move(op2))
+    {
+        GUM_CONSTRUCTOR(ASTminus);
+    }
+
+    template<typename GUM_SCALAR>
+    ASTminus<GUM_SCALAR>::ASTminus(const ASTminus<GUM_SCALAR>& other) 
+        : ASTBinaryOp<GUM_SCALAR>(other)
+    {
+        GUM_CONS_CPY(ASTminus);
+    }
+
+    template<typename GUM_SCALAR>
+    ASTminus<GUM_SCALAR>::~ASTminus() {
+        GUM_DESTRUCTOR(ASTminus);
+    }
+
+    template<typename GUM_SCALAR>
+    std::string ASTminus<GUM_SCALAR>::type() const {
+        return "-";
+    }
 
     template<typename GUM_SCALAR>
     Potential<GUM_SCALAR> ASTminus<GUM_SCALAR>::eval(const BayesNet<GUM_SCALAR>& bn) const {
@@ -129,8 +202,27 @@ namespace gum{
 
     template<typename GUM_SCALAR>
     ASTmult<GUM_SCALAR>::ASTmult(std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2)
-        : ASTBinaryOp<GUM_SCALAR>("*", std::move(op1), std::move(op2))
-    {}
+        : ASTBinaryOp<GUM_SCALAR>(std::move(op1), std::move(op2))
+    {
+        GUM_CONSTRUCTOR(ASTmult);
+    }
+
+    template<typename GUM_SCALAR>
+    ASTmult<GUM_SCALAR>::ASTmult(const ASTmult<GUM_SCALAR>& other) 
+        : ASTBinaryOp<GUM_SCALAR>(other)
+    {
+        GUM_CONS_CPY(ASTmult);
+    }
+
+    template<typename GUM_SCALAR>
+    ASTmult<GUM_SCALAR>::~ASTmult() {
+        GUM_DESTRUCTOR(ASTmult);
+    }
+
+    template<typename GUM_SCALAR>
+    std::string ASTmult<GUM_SCALAR>::type() const {
+        return "*";
+    }
 
     template<typename GUM_SCALAR>
     Potential<GUM_SCALAR> ASTmult<GUM_SCALAR>::eval(const BayesNet<GUM_SCALAR>& bn) const {
@@ -153,8 +245,27 @@ namespace gum{
 
     template<typename GUM_SCALAR>
     ASTdiv<GUM_SCALAR>::ASTdiv(std::unique_ptr<ASTtree<GUM_SCALAR>> op1, std::unique_ptr<ASTtree<GUM_SCALAR>> op2)
-        : ASTBinaryOp<GUM_SCALAR>("/", std::move(op1), std::move(op2))
-    {}
+        : ASTBinaryOp<GUM_SCALAR>(std::move(op1), std::move(op2))
+    {
+        GUM_CONSTRUCTOR(ASTdiv);
+    }
+
+    template<typename GUM_SCALAR>
+    ASTdiv<GUM_SCALAR>::ASTdiv(const ASTdiv<GUM_SCALAR>& other) 
+        : ASTBinaryOp<GUM_SCALAR>(other)
+    {
+        GUM_CONS_CPY(ASTdiv);
+    }
+
+    template<typename GUM_SCALAR>
+    ASTdiv<GUM_SCALAR>::~ASTdiv() {
+        GUM_DESTRUCTOR(ASTdiv);
+    }
+
+    template<typename GUM_SCALAR>
+    std::string ASTdiv<GUM_SCALAR>::type() const {
+        return "/";
+    }
 
     template<typename GUM_SCALAR>
     Potential<GUM_SCALAR> ASTdiv<GUM_SCALAR>::eval(const BayesNet<GUM_SCALAR>& bn) const {
@@ -194,8 +305,27 @@ namespace gum{
         const std::shared_ptr<BayesNet<GUM_SCALAR>> bn, 
         const std::shared_ptr<Set<std::string>> varset, 
         const std::shared_ptr<Set<std::string>> knwset)
-        : ASTtree("_posterior_"), _bn_(bn), _varset_(varset), _knwset_(_ASTPosteriorProba_init_knwset(*bn, *varset, *knwset))
-    {};
+        : _bn_(bn), _varset_(varset), _knwset_(_ASTPosteriorProba_init_knwset(*bn, *varset, *knwset))
+    {
+        GUM_CONSTRUCTOR(ASTPosteriorProba);
+    }
+
+    template<typename GUM_SCALAR>
+    ASTPosteriorProba<GUM_SCALAR>::ASTPosteriorProba(const ASTPosteriorProba<GUM_SCALAR>& other) 
+        : ASTtree<GUM_SCALAR>(other), _bn_(other._bn_), _varset_(other._varset_), _knwset_(other._knwset_)
+    {
+        GUM_CONS_CPY(ASTPosteriorProba);
+    }
+
+    template<typename GUM_SCALAR>
+    ASTPosteriorProba<GUM_SCALAR>::~ASTPosteriorProba() {
+        GUM_DESTRUCTOR(ASTPosteriorProba);
+    }
+
+    template<typename GUM_SCALAR>
+    std::string ASTPosteriorProba<GUM_SCALAR>::type() const {
+        return "_posterior_";
+    }
 
     void ___sort_comma_push_stream(std::ostream& outs, const Set<std::string>& VS);
     void ___sort_comma_push_stream(std::ostream& outs, const std::vector<std::string>& VS);
@@ -259,6 +389,7 @@ namespace gum{
             }
         }
 
+        // TODO what is this
 //     # res = p.extract({k: v for k, v in context.todict().items() if k in self.vars + self.knw})
 
         if(this->getVerbosity()) cout << "END OF EVAL $" << _to_latex_({}) << "$ : " << p << std::endl;
@@ -268,8 +399,27 @@ namespace gum{
 
     template<typename GUM_SCALAR>
     ASTJointProba<GUM_SCALAR>::ASTJointProba(const std::shared_ptr<NameSet> varNames)
-        : ASTtree<GUM_SCALAR>("_joint_"), _varnames_(varNames) 
-    {}
+        : _varnames_(varNames) 
+    {
+        GUM_CONSTRUCTOR(ASTJointProba);
+    }
+
+    template<typename GUM_SCALAR>
+    ASTJointProba<GUM_SCALAR>::ASTJointProba(const ASTJointProba<GUM_SCALAR>& other) 
+        : ASTtree<GUM_SCALAR>(other), _varnames_(other._varnames_)
+    {
+        GUM_CONS_CPY(ASTJointProba);
+    }
+
+    template<typename GUM_SCALAR>
+    ASTJointProba<GUM_SCALAR>::~ASTJointProba() {
+        GUM_DESTRUCTOR(ASTJointProba);
+    }
+
+    template<typename GUM_SCALAR>
+    std::string ASTJointProba<GUM_SCALAR>::type() const {
+        return "_joint_";
+    }
 
     template<typename GUM_SCALAR> // TODO: this function crashes...
     Potential<GUM_SCALAR> ASTJointProba<GUM_SCALAR>::eval(const BayesNet<GUM_SCALAR>& bn) const {
@@ -336,9 +486,27 @@ namespace gum{
     template<typename GUM_SCALAR>
     template<std::input_iterator Iter, std::sentinel_for<Iter> Sen>
     ASTsum<GUM_SCALAR>::ASTsum(Iter b_var, Sen e_var, std::unique_ptr<ASTtree<GUM_SCALAR>> term)
-        : ASTtree<GUM_SCALAR>("_sum_"), _var_(*b_var), 
-        _term_(b_var+1==e_var ? std::move(term) : std::make_unique<ASTsum>(b_var+1, e_var, std::move(term)))
-    {}
+        : _var_(*b_var), _term_(b_var+1==e_var ? std::move(term) : std::make_unique<ASTsum>(b_var+1, e_var, std::move(term)))
+    {
+        GUM_CONSTRUCTOR(ASTsum)
+    }
+
+    template<typename GUM_SCALAR>
+    ASTsum<GUM_SCALAR>::ASTsum(const ASTsum<GUM_SCALAR>& other)
+        : ASTtree<GUM_SCALAR>(static_cast<const ASTtree<GUM_SCALAR>&>(other)), _var_(other._var_), _term_(std::move(other._term_->clone()))
+    {
+        GUM_CONS_CPY(ASTsum);
+    }
+
+    template<typename GUM_SCALAR>
+    ASTsum<GUM_SCALAR>::~ASTsum(){
+        GUM_DESTRUCTOR(ASTsum);
+    }
+
+    template<typename GUM_SCALAR>
+    std::string ASTsum<GUM_SCALAR>::type() const {
+        return "_sum_";
+    }
 
     template<typename GUM_SCALAR>
     Potential<GUM_SCALAR> ASTsum<GUM_SCALAR>::eval(const BayesNet<GUM_SCALAR>& bn) const{
@@ -392,6 +560,24 @@ namespace gum{
     std::string ASTsum<GUM_SCALAR>::_to_latex_indep_(NameCounter* nameOccur) const{
         return "\\left(" + _to_latex_(nameOccur) + "\\right)";
     }
+
+    // I know, I know, a bit ugly, but this was by far the most elegant solution compared to CRTP clone semantics 
+    // or even copy-pasting the whole function by hand everywhere
+    #define ___ASTtree_clone_function_injector_MACRO___(ASTtype) \
+        template<typename GUM_SCALAR> \
+        std::unique_ptr<ASTtree<GUM_SCALAR>> ASTtype<GUM_SCALAR>::clone() const { \
+            return std::unique_ptr<ASTtree<GUM_SCALAR>>(new std::remove_const_t<std::remove_reference_t<decltype(*this)>>(*this)); \
+        }
+
+    ___ASTtree_clone_function_injector_MACRO___(ASTplus)
+    ___ASTtree_clone_function_injector_MACRO___(ASTminus)
+    ___ASTtree_clone_function_injector_MACRO___(ASTmult)
+    ___ASTtree_clone_function_injector_MACRO___(ASTdiv)
+    ___ASTtree_clone_function_injector_MACRO___(ASTPosteriorProba)
+    ___ASTtree_clone_function_injector_MACRO___(ASTJointProba)
+    ___ASTtree_clone_function_injector_MACRO___(ASTsum)
+
+    #undef ___ASTtree_clone_function_injector_MACRO___
 
 
     template<typename GUM_SCALAR, std::forward_iterator Iter, std::sentinel_for<Iter> Sen>

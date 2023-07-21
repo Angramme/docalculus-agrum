@@ -8,6 +8,7 @@
 
 namespace gum{
 
+    // TODO: move all inlines into separate files
 
     /**
      * @brief Represents an hedge exception for a causal query
@@ -21,14 +22,7 @@ namespace gum{
         Set<std::string> observables;
     public:
         inline const Set<std::string>& get_observables() const { return observables; }
-        char* what(){
-            if(observables.size() == 0) return const_cast<char*>(message.c_str());
-            std::string msg = message + "\n\tobservables:\n";
-            for(const auto& o : observables){
-                msg += "\n\t - " + o;
-            }
-            return const_cast<char*>(message.c_str());
-        }
+        char* what();
         
         /**
          * @brief Represents an hedge exception for a causal query
@@ -36,10 +30,14 @@ namespace gum{
          * @param msg str :
          * @param observables NameSet :
         */
-        HedgeException(const char* msg, Set<std::string> observables)
+        inline HedgeException(const char* msg, Set<std::string> observables)
             : message("HedgeException : "), observables(observables)
         {
             message += msg;
+            GUM_CONSTRUCTOR(HedgeException)
+        }
+        inline ~HedgeException(){
+            GUM_DESTRUCTOR(HedgeException)
         }
     };
 
@@ -52,7 +50,7 @@ namespace gum{
     private:
         std::string message;
     public:
-        char* what(){
+        inline char* what(){
             return const_cast<char*>(message.c_str());
         }
         /**
@@ -60,10 +58,14 @@ namespace gum{
          *
          * @param msg 
          */
-        UnidentifiableException(const char* msg)
+        inline UnidentifiableException(const char* msg)
             : message("UnidentifiableException : ")
         {
             message += msg;
+            GUM_CONSTRUCTOR(UnidentifiableException)
+        }
+        inline ~UnidentifiableException(){
+            GUM_DESTRUCTOR(UnidentifiableException)
         }
     };
 }
