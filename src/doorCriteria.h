@@ -152,16 +152,17 @@ namespace gum{
         );
         DoorIterator(bool is_frontdoor);
         DoorIterator() = delete;
+
+        bool _advance_selection_mask_();
+        void _gen_cur_();
+
+    public:
         ~DoorIterator();
         DoorIterator(DoorIterator&& v);
         DoorIterator(const DoorIterator& v);
         DoorIterator& operator=(DoorIterator&& v);
         DoorIterator& operator=(const DoorIterator& v);
 
-        bool _advance_selection_mask_();
-        void _gen_cur_();
-
-    public:
         /**
          * @brief Dereference operator 
          * 
@@ -175,6 +176,9 @@ namespace gum{
          */
         pointer operator->() const;
     };
+
+    template<typename iter>
+    class DoorIterable;
 
     class BackdoorIterator : public DoorIterator {
     public:
@@ -197,12 +201,12 @@ namespace gum{
         BackdoorIterator& operator=(BackdoorIterator&& v);
         BackdoorIterator& operator=(const BackdoorIterator& v);
 
-        // template<typename GUM_SCALAR>
-        // friend BackdoorIterable backdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_bd);
+        template<typename GUM_SCALAR>
+        friend DoorIterable<BackdoorIterator> backdoor_generator(const BayesNet<GUM_SCALAR>&, NodeId, NodeId, const NodeSet&);
         template<typename iter>
         friend class DoorIterable;
     protected:
-        using DoorIterator::DoorIterator;
+        BackdoorIterator();
         BackdoorIterator(const std::shared_ptr<DAG> G, const std::shared_ptr<NodeSet> possible, NodeId cause, NodeId effect);
         bool _next_();
     };
@@ -234,12 +238,12 @@ namespace gum{
         FrontdoorIterator<GUM_SCALAR>& operator=(const FrontdoorIterator<GUM_SCALAR>& v);
 
 
-        // template<typename GUM_SCALAR>
-        // friend FrontdoorIterable frontdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_bd);
+        template<typename GUM_SCALAR>
+        friend DoorIterable<FrontdoorIterator<GUM_SCALAR>> frontdoor_generator(const BayesNet<GUM_SCALAR>&, NodeId, NodeId, const NodeSet&);
         template<typename iter>
         friend class DoorIterable;
     protected:
-        using DoorIterator::DoorIterator;
+        FrontdoorIterator();
         FrontdoorIterator(const std::shared_ptr<BayesNet<GUM_SCALAR>> bn, const std::shared_ptr<NodeSet> possible, NodeId cause, NodeId effect, bool nodiPath);
         bool _next_();
     };
@@ -251,17 +255,18 @@ namespace gum{
         const iter _begin; 
         const iter _end; 
     protected: 
-        inline DoorIterable(iter&& begin, iter&& end) : _begin(begin), _end(end) { GUM_CONSTRUCTOR(DoorIterable) } 
-        inline DoorIterable() : _begin(!std::is_same<iter, BackdoorIterator>::value), _end(!std::is_same<iter, BackdoorIterator>::value) { GUM_CONSTRUCTOR(DoorIterable) }
-        inline ~DoorIterable() { GUM_DESTRUCTOR(DoorIterable) };
-        inline DoorIterable(DoorIterable<iter>&& v) : _begin(std::move(v._begin)), _end(std::move(v._end)) { GUM_CONS_MOV(DoorIterable) };
-        inline DoorIterable(const FrontdoorIterator<iter>& v) : _begin(v._begin), _end(v._end) { GUM_CONS_CPY(DoorIterable) };
-        inline DoorIterable<iter>& operator=(DoorIterable<iter>&& v) { _begin = std::move(v._begin); _end = std::move(v._end); GUM_OP_MOV(DoorIterable); return *this; };
-        inline DoorIterable<iter>& operator=(const DoorIterable<iter>& v) { _begin = v._begin; _end = v._end; GUM_OP_CPY(DoorIterable); return *this; };
+        INLINE DoorIterable(iter&& begin, iter&& end); 
+        INLINE DoorIterable();
 
     public: 
-        inline iter begin() const { return _begin; }; 
-        inline iter end() const { return _end; }; 
+        INLINE ~DoorIterable();
+        INLINE DoorIterable(DoorIterable<iter>&& v);
+        INLINE DoorIterable(const FrontdoorIterator<iter>& v);
+        INLINE DoorIterable<iter>& operator=(DoorIterable<iter>&& v);
+        INLINE DoorIterable<iter>& operator=(const DoorIterable<iter>& v);
+        
+        INLINE iter begin() const; 
+        INLINE iter end() const; 
 
         template<typename GUM_SCALAR>
         friend DoorIterable<BackdoorIterator> backdoor_generator(const BayesNet<GUM_SCALAR>& bn, NodeId cause, NodeId effect, const NodeSet& not_bd);
@@ -300,5 +305,9 @@ namespace gum{
 };
 
 #include "doorCriteria_tpl.h"
+
+#ifndef GUM_NO_INLINE
+#include "doorCriteria_inl.h"
+#endif
 
 #endif 

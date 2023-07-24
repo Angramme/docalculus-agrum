@@ -374,11 +374,11 @@ namespace gum{
        */
       bool isIndependent(const NodeSet& X, const NodeSet& Y, const NodeSet& Z) const final;
 
-      bool isIndependent(const std::string&                Xname,
+      INLINE bool isIndependent(const std::string&                Xname,
                         const std::string&                Yname,
                         const std::vector< std::string >& Znames) const ;
 
-      bool isIndependent(const std::vector< std::string >& Xnames,
+      INLINE bool isIndependent(const std::vector< std::string >& Xnames,
                         const std::vector< std::string >& Ynames,
                         const std::vector< std::string >& Znames) const;
 

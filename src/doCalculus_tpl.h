@@ -70,8 +70,10 @@ namespace gum{
         for(const auto& n : s) undi.addNodeWithId(n);
         for(const auto& latent : cm.latentVariablesIds()){
             auto chils = cm.children(latent);
-            for(auto&& arc : combinations(chils, 2)){
-                undi.addEdge(arc[0], arc[1]);
+            for(auto x1 = chils.beginSafe(); x1 != chils.endSafe(); ++x1){
+                for(auto x2 = x1+1; x2 != chils.endSafe(); ++x2){
+                    undi.addEdge(x1, x2);
+                }
             }
         }
 
@@ -235,22 +237,17 @@ namespace gum{
             auto SminY = S - Y;
             if((SminY).size() == 0) return prod;
 
-            auto ilsy = std::vector<NodeId>(SminY.size());
-            {
-                size_t i = 0;
-                for(const auto& x : SminY) ilsy[i++](cm.idFromName(x));
-            }
-            return ASTsum(ilsy.begin(), ilsy.end(), prod);
+            return ASTsum(SminY, prod);
         }
 
         // step 7 ---------------------------
-        for(const auto& ispr : cdg){ // TODO: reecrire code qui utilise imap et combinations
+        for(const auto& ispr : cdg){ 
             if(iS > ispr) continue;
-            auto spr = imap([&](NodeId i){ return cm.names()[i]; }, ispr);
             auto prb = std::vector<ASTtree<GUM_SCALAR>>();
             auto top = _topological_sort(cm);
 
-            for(const auto& v : spr){
+            for(const auto& v_id : ispr){
+                auto v = cm.names()[v_id];
                 auto vpi = std::find(top.begin(), top.end(), cm.idFromName(v));
                 if(vpi == top.begin() || vpi == top.end()){
                     prb.push_back(ASTjointProba({v}));
@@ -261,7 +258,9 @@ namespace gum{
                 }
             }
             auto P = productOfTrees(prb);
-            return identifyingIntervention(inducedCausalSubModel(cm, ispr), Y, X + Set(spr.begin(), spr.end()), P);
+            NameSet Xspr = X;
+            for(const auto& v_id : ispr) Xspr.insert(cm.names()[v_id]);
+            return identifyingIntervention(inducedCausalSubModel(cm, ispr), Y, Xspr, P);
         }
 
         return nullptr;

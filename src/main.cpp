@@ -1,3 +1,5 @@
+#define GUM_TRACE_ON
+
 #include <iostream>
 
 #include <agrum/BN/BayesNet.h>
@@ -25,6 +27,7 @@ int main(void) {
   obs1.cpt("Cancer").fillWith({0.9,0.1,0.7,0.3}); 
 
   std::cout << "the BN \n" << obs1 << std::endl;
+  GUM_TRACE_VAR(obs1)
   std::cout << "the joint distribution \n" << obs1.cpt("Smoking") * obs1.cpt("Cancer") << std::endl;
   std::cout << "the marginal for $smoking$ \n" << obs1.cpt("Smoking") << std::endl;
   std::cout << "the CPT for $cancer$ \n" << obs1.cpt("Cancer") << std::endl;
@@ -60,7 +63,12 @@ int main(void) {
   // auto ret = productOfTreesI<double>(xs.begin(), xs.end());
   auto ret = productOfTrees(xs);
 
-  // auto ii = backdoor_generator(obs1, 0, 1);
+  std::cout << "hello!" << std::endl;
+
+
+  for(const auto& x : backdoor_generator(obs1, 0, 1)){
+    std::cout << *x.beginSafe() << std::endl;
+  }
 
   return 0;
 }

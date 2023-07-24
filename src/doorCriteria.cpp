@@ -3,6 +3,9 @@
 
 #include <agrum/tools/core/set.h>
 
+#ifdef GUM_NO_INLINE
+#  include "doorCriteria_inl.h"
+#endif
 namespace gum{
 
     DoorIterator::DoorIterator(
@@ -114,6 +117,11 @@ namespace gum{
             std::vector<bool>(possible->size(), false), 
             0,
             NodeSet({}))
+    {
+        GUM_CONSTRUCTOR(BackdoorIterator)
+    }
+    BackdoorIterator::BackdoorIterator()
+        : DoorIterator(false)
     {
         GUM_CONSTRUCTOR(BackdoorIterator)
     }

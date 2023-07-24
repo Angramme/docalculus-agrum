@@ -1,5 +1,9 @@
 #include "exceptions.h"
 
+#ifdef GUM_NO_INLINE
+#include "exceptions_inl.h"
+#endif
+
 namespace gum{
 
     char* HedgeException::what(){

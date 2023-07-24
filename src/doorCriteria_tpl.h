@@ -125,14 +125,15 @@ namespace gum{
             for(const auto& i : descendants(bn, cause)) GG.eraseNode(i);
 
             // we only keep interesting connex components
-            for(const auto& nodes : GG.connectedComponents().values()){
-                if(!nodes.isdisjoint(interest)) continue;
+            for(const auto& [_, nodes] : GG.connectedComponents()){
+                if((interest + nodes).size() != 0) continue;
                 for(const auto& n : nodes) G->eraseNode(n);
             }
         }
 
-        auto possible = G->nodes() - (bn.descendants(cause, {}) + interest + not_bd);
-        if(possible.size() == 0) return BackdoorIterable();
+        std::shared_ptr<NodeSet> possible = std::make_shared<NodeSet>();
+        *possible = G->nodes().asNodeSet() - (descendants(bn, cause) + interest + not_bd);
+        if(possible->size() == 0) return BackdoorIterable();
 
         return BackdoorIterable(BackdoorIterator(G, possible, cause, effect), BackdoorIterator());
     }
@@ -179,6 +180,12 @@ namespace gum{
             _nodiPath_(nodiPath)
 
     {
+        GUM_CONSTRUCTOR(FrontdoorIterator)
+    }
+    template<typename GUM_SCALAR>
+    FrontdoorIterator<GUM_SCALAR>::FrontdoorIterator()
+        : DoorIterator(true), _bn_(nullptr), _nodiPath_(false)
+    {    
         GUM_CONSTRUCTOR(FrontdoorIterator)
     }
     template<typename GUM_SCALAR>

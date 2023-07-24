@@ -145,7 +145,7 @@ namespace gum{
      * @return const NodeSet& 
      */
     template<typename GraphT>
-    const NodeSet& barren_nodes(const GraphT& bn, const NodeSet& interest);
+    NodeSet barren_nodes(const GraphT& bn, const NodeSet& interest);
 
 
 
@@ -192,11 +192,10 @@ namespace gum{
      * @param bn 
      * @param x 
      * @param marked 
-     * @param ensdesc 
      * @return NodeSet 
      */
     template<typename GUM_SCALAR>
-    NodeSet descendants(const BayesNet<GUM_SCALAR>& bn, NodeId x, const NodeSet& marked = NodeSet({}), const NodeSet& ensdesc = NodeSet({}));
+    NodeSet descendants(const BayesNet<GUM_SCALAR>& bn, NodeId x, const NodeSet& marked = NodeSet({}));
 }
 
 #include "dSeparation_tpl.h"

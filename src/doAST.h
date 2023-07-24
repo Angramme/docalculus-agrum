@@ -87,7 +87,7 @@ namespace gum{
          * @param nameOccur the number of occurences of each variable
          * @return std::string the LaTeX representation pf the tree
          */
-        std::string toLatex(NameCounter* nameOccur) const;
+        INLINE std::string toLatex(NameCounter* nameOccur) const;
 
         /**
          * @brief Evaluation of an AST tree from inside a BN
@@ -201,28 +201,28 @@ namespace gum{
          * 
          * @return const ASTtree& 
          */
-        const ASTtree<GUM_SCALAR>& op1() const;
+        INLINE const ASTtree<GUM_SCALAR>& op1() const;
         
         /**
          * @brief get right operand
          * 
          * @return const ASTtree& 
          */
-        const ASTtree<GUM_SCALAR>& op2() const;
+        INLINE const ASTtree<GUM_SCALAR>& op2() const;
         
         /**
          * @brief get left operand
          * 
          * @return const ASTtree& 
          */
-        ASTtree<GUM_SCALAR>& op1();
+        INLINE ASTtree<GUM_SCALAR>& op1();
 
         /**
          * @brief get right operand
          * 
          * @return const ASTtree& 
          */
-        ASTtree<GUM_SCALAR>& op2();
+        INLINE ASTtree<GUM_SCALAR>& op2();
 
         virtual void _print_(std::ostream& outs, int indent) const;
     };
@@ -411,21 +411,21 @@ namespace gum{
          * 
          * @return const Set<std::string>& 
          */
-        const NameSet& vars() const;
+        INLINE const NameSet& vars() const;
 
         /**
          * @brief (Conditioning) knw in \f( P_{bn}(vars|knw) \f)
          * 
          * @return const Set<std::string>& 
          */
-        const NameSet& knw() const;
+        INLINE const NameSet& knw() const;
 
         /**
          * @brief the observationnal BayesNet in \f( P_{bn}(vars|knw) \f)
          * 
          * @return const Set<std::string>& 
          */
-        const NameSet& bn() const;
+        INLINE const NameSet& bn() const;
 
         /**
          * @brief Evaluation of a AST tree from inside a BN
@@ -472,7 +472,7 @@ namespace gum{
          * 
          * @return const NameSet& 
          */
-        const NameSet& vars() const;
+        INLINE const NameSet& vars() const;
 
         /**
          * @brief Evaluation of a AST tree from inside a BN
@@ -550,14 +550,14 @@ namespace gum{
          * 
          * @return const ASTtree<GUM_SCALAR>& 
          */
-        const ASTtree<GUM_SCALAR>& term() const;
+        INLINE const ASTtree<GUM_SCALAR>& term() const;
         
         /**
          * @brief get the var
          * 
          * @return const ASTtree<GUM_SCALAR>& 
          */
-        const std::string& var() const;
+        INLINE const std::string& var() const;
 
         /**
          * @brief Evaluation of a AST tree from inside a BN
@@ -590,7 +590,7 @@ namespace gum{
      */
     template<typename GUM_SCALAR, std::forward_iterator Iter, std::sentinel_for<Iter> Sen>
         // requires std::same_as<std::iter_value_t<Iter>, std::unique_ptr<ASTtree<GUM_SCALAR>>>
-    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTreesI(Iter begin, Sen end);
+    INLINE std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTreesI(Iter begin, Sen end);
 
     /**
      * @brief create an ASTtree for a sequence of multiplications of ASTtree
@@ -601,7 +601,7 @@ namespace gum{
      * @return ASTtree<GUM_SCALAR>  the ASTtree representing the tree of multiplications
      */
     template<typename GUM_SCALAR, typename Iterable>
-    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(Iterable& v);
+    INLINE std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(Iterable& v);
     
     /**
      * @brief create an ASTtree for a sequence of multiplications of ASTtree
@@ -611,7 +611,7 @@ namespace gum{
      * @return ASTtree<GUM_SCALAR>  the ASTtree representing the tree of multiplications
      */
     template<typename GUM_SCALAR>
-    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(std::initializer_list<std::unique_ptr<ASTtree<GUM_SCALAR>>> xs);
+    INLINE std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(std::initializer_list<std::unique_ptr<ASTtree<GUM_SCALAR>>> xs);
     
     /**
      * @brief create an ASTtree for a sequence of multiplications of ASTtree.
@@ -623,7 +623,7 @@ namespace gum{
      * @return ASTtree<GUM_SCALAR>  the ASTtree representing the tree of multiplications
      */
     template<typename GUM_SCALAR>
-    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(std::vector<std::unique_ptr<ASTtree<GUM_SCALAR>>>& xs);
+    INLINE std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(std::vector<std::unique_ptr<ASTtree<GUM_SCALAR>>>& xs);
     
     /**
      * @brief create an ASTtree for a sequence of multiplications of ASTtree.
@@ -635,7 +635,7 @@ namespace gum{
      * @return ASTtree<GUM_SCALAR>  the ASTtree representing the tree of multiplications
      */
     template<typename GUM_SCALAR>
-    std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(Set<std::unique_ptr<ASTtree<GUM_SCALAR>>>& xs);
+    INLINE std::unique_ptr<ASTtree<GUM_SCALAR>> productOfTrees(Set<std::unique_ptr<ASTtree<GUM_SCALAR>>>& xs);
 }
 
 /**

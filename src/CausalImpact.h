@@ -20,8 +20,6 @@
 namespace gum{
     using NameSet = Set<std::string>;
 
-    // TODO: add boundary (and connectedComponents) everywhere where there is parents or neighbours or children...
-
     /**
      * @brief Determines the causal impact of interventions. Determines the causal impact
      *  of the interventions specified in ``doing`` on the single or list of variables ``on``

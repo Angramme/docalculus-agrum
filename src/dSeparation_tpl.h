@@ -152,7 +152,7 @@ namespace gum{
     }
 
     template<typename GraphT>
-    const NodeSet& barren_nodes(const GraphT& bn, const NodeSet& interest){
+    NodeSet barren_nodes(const GraphT& bn, const NodeSet& interest){
         auto s = NodeSet();
         
         for(const auto& x : bn.nodes()){
@@ -167,14 +167,14 @@ namespace gum{
     DAG partialDAGfromBN(const GraphT& bn, const NodeSet& nexcl){
         auto d = DAG();
 
-        auto nodes = bn.nodes() - nexcl;
+        auto nodes = bn.nodes().asNodeSet() - nexcl;
         for(const auto& n : nodes){
             d.addNodeWithId(n);
         }
 
         for(const auto& xy : bn.arcs()){
-            if(nodes.contains(xy.first()) && nodes.contains(xy.second())){
-                d.addArc(xy);
+            if(nodes.contains(xy.tail()) && nodes.contains(xy.head())){
+                d.addArc(xy.tail(), xy.head());
             }
         }
         return d;
@@ -246,20 +246,20 @@ namespace gum{
 
     template<typename GUM_SCALAR>
     NodeSet _descendants_rec(const BayesNet<GUM_SCALAR>& bn, NodeId x, NodeSet& marked, NodeSet& ensdesc) {
-        ensdesc = ensdesc + bn.children(x);
+        ensdesc += bn.children(x);
 
         for(const auto& c : bn.children(x)){
             if(marked.contains(c)) continue;
             marked.insert(c);
-            ensdesc = ensdesc + _descendants_rec(bn, c, marked);
+            ensdesc += _descendants_rec(bn, c, marked, ensdesc);
         }
         return ensdesc;
     }
 
     template<typename GUM_SCALAR>
-    NodeSet descendants(const BayesNet<GUM_SCALAR>& bn, NodeId x, const NodeSet& marked, const NodeSet& ensdesc) {
+    NodeSet descendants(const BayesNet<GUM_SCALAR>& bn, NodeId x, const NodeSet& marked) {
         NodeSet m = marked;
-        NodeSet e = ensdesc;
+        NodeSet e = NodeSet({});
         return _descendants_rec(bn, x, m, e);
     }
 }
