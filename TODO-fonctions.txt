@@ -10,6 +10,8 @@ La liste:
 - CausalFormula::toLatex
 
 
+A enlever:
+- names Potential
 
 
 other TODO stuff:
